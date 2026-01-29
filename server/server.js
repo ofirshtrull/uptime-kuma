@@ -47,6 +47,7 @@ if (!semver.satisfies(nodeVersion, requiredNodeVersions)) {
 
 const args = require("args-parser")(process.argv);
 const { sleep, log, getRandomInt, genSecret, isDev } = require("../src/util");
+const { isSSL } = require("./config");
 const config = require("./config");
 
 log.debug("server", "Arguments");
@@ -442,7 +443,6 @@ let needSetup = false;
     // Share session middleware with socket.io
     io.use((socket, next) => {
         const req = socket.request;
-        const res = socket.request.res || {};
         // Use the same session middleware
         if (req.session) {
             next();
