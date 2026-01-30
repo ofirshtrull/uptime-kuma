@@ -135,18 +135,22 @@ export default {
             });
 
             socket.on("loginRequired", async () => {
-                // First check for Okta session
+                let token = this.storage().token;
+
+                // If we have a JWT token, try that first (fast path)
+                if (token && token !== "autoLogin") {
+                    this.loginByToken(token);
+                    return;
+                }
+
+                // No JWT token - check for Okta session (for users who authenticated via Okta)
                 if (await this.checkOktaSession()) {
                     return;
                 }
 
-                let token = this.storage().token;
-                if (token && token !== "autoLogin") {
-                    this.loginByToken(token);
-                } else {
-                    this.$root.storage().removeItem("token");
-                    this.allowLoginDialog = true;
-                }
+                // No valid auth method, show login dialog
+                this.$root.storage().removeItem("token");
+                this.allowLoginDialog = true;
             });
 
             socket.on("monitorList", (data) => {
