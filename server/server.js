@@ -76,8 +76,6 @@ log.info("server", "Loading modules");
 log.debug("server", "Importing express");
 const express = require("express");
 const expressStaticGzip = require("express-static-gzip");
-const session = require("express-session");
-const passport = require("passport");
 log.debug("server", "Importing redbean-node");
 const { R } = require("redbean-node");
 log.debug("server", "Importing jsonwebtoken");
@@ -195,24 +193,6 @@ const oktaAuth = require("./okta-auth");
 
 app.use(express.json());
 
-// Session middleware (required for Okta SSO)
-app.use(
-    session({
-        secret: process.env.SESSION_SECRET || "uptime-kuma-session-secret-change-in-production",
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            secure: isSSL,
-            httpOnly: true,
-            maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        },
-    })
-);
-
-// Initialize Passport
-app.use(passport.initialize());
-app.use(passport.session());
-
 // Global Middleware
 app.use(function (req, res, next) {
     if (!disableFrameSameOrigin) {
@@ -257,6 +237,28 @@ let needSetup = false;
 
     // Initialize Okta authentication if configured
     if (process.env.AUTH_PROVIDER === "okta") {
+        // Require session and passport only when Okta is enabled
+        const session = require("express-session");
+        const passport = require("passport");
+
+        // Session middleware (required for Okta SSO)
+        app.use(
+            session({
+                secret: process.env.SESSION_SECRET || "uptime-kuma-session-secret-change-in-production",
+                resave: false,
+                saveUninitialized: false,
+                cookie: {
+                    secure: isSSL,
+                    httpOnly: true,
+                    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+                },
+            })
+        );
+
+        // Initialize Passport
+        app.use(passport.initialize());
+        app.use(passport.session());
+
         const oktaConfig = oktaAuth.constructor.createConfigFromEnv();
         if (oktaConfig) {
             oktaAuth.initialize(oktaConfig);
@@ -390,6 +392,8 @@ let needSetup = false;
 
     // Okta SSO Routes
     if (oktaAuth.isEnabled()) {
+        const passport = require("passport");
+
         // API endpoint to check if Okta is enabled
         app.get("/api/okta-enabled", (req, res) => {
             res.json({ enabled: true, loginUrl: "/auth/okta" });
@@ -440,17 +444,19 @@ let needSetup = false;
 
     log.debug("server", "Adding socket handler");
 
-    // Share session middleware with socket.io
-    io.use((socket, next) => {
-        const req = socket.request;
-        // Use the same session middleware
-        if (req.session) {
-            next();
-        } else {
-            // If no session middleware, still allow connection (for non-Okta auth)
-            next();
-        }
-    });
+    // Share session middleware with socket.io (only when Okta is enabled)
+    if (process.env.AUTH_PROVIDER === "okta") {
+        io.use((socket, next) => {
+            const req = socket.request;
+            // Use the same session middleware
+            if (req.session) {
+                next();
+            } else {
+                // If no session middleware, still allow connection (for non-Okta auth)
+                next();
+            }
+        });
+    }
 
     io.on("connection", async (socket) => {
         await sendInfo(socket, true);
