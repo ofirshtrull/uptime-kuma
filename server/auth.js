@@ -6,7 +6,6 @@ const { log } = require("../src/util");
 const { loginRateLimiter, apiRateLimiter } = require("./rate-limiter");
 const { Settings } = require("./settings");
 const dayjs = require("dayjs");
-const oktaAuth = require("./okta-auth");
 
 /**
  * Login to web app

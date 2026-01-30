@@ -14,7 +14,8 @@ class OktaAuthService {
     initialized = false;
 
     /**
-     *
+     * Get the singleton instance of OktaAuthService
+     * @returns {OktaAuthService} The singleton instance
      */
     static getInstance() {
         if (!OktaAuthService.instance) {
@@ -25,7 +26,7 @@ class OktaAuthService {
 
     /**
      * Check if Okta authentication is enabled
-     * @returns {boolean}
+     * @returns {boolean} True if Okta is enabled and initialized
      */
     isEnabled() {
         return process.env.AUTH_PROVIDER === "okta" && this.initialized;
@@ -35,6 +36,7 @@ class OktaAuthService {
      * Initialize Okta SAML strategy
      * @param {object} config Okta configuration
      * @returns {void}
+     * @throws {Error} If required Okta configuration is missing
      */
     initialize(config) {
         if (!config.entryPoint || !config.issuer || !config.cert) {
@@ -120,7 +122,7 @@ class OktaAuthService {
     /**
      * Extract groups from SAML profile
      * @param {object} profile SAML profile
-     * @returns {string[]}
+     * @returns {string[]} Array of group names extracted from the profile
      */
     extractGroups(profile) {
         const groups = [];
@@ -193,7 +195,7 @@ class OktaAuthService {
 
     /**
      * Get Okta login URL
-     * @returns {string}
+     * @returns {string} The URL path for Okta authentication
      */
     getAuthUrl() {
         return "/auth/okta";
