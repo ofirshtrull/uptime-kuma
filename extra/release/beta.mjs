@@ -33,13 +33,15 @@ checkReleaseBranch(branchName);
 // Check if the version is a valid semver
 checkVersionFormat(version);
 
-// Check if the semver identifier is "beta"
+// Check if there is a prerelease identifier (e.g., beta, sso, rc)
 const semverIdentifier = semver.prerelease(version);
 console.log("Semver identifier:", semverIdentifier);
-if (semverIdentifier[0] !== "beta") {
-    console.error("VERSION should have a semver identifier of 'beta'");
+if (!semverIdentifier || semverIdentifier.length === 0) {
+    console.error("VERSION should have a prerelease identifier (e.g., 2.2.0-beta.1, 2.2.0-sso)");
     process.exit(1);
 }
+const prereleaseType = semverIdentifier[0];
+console.log("Prerelease type:", prereleaseType);
 
 // Check if docker is running
 checkDocker();
@@ -60,19 +62,19 @@ if (!dryRun) {
     // Build slim image (rootless)
     buildImage(
         repoNames,
-        ["beta-slim-rootless", ver(version, "slim-rootless")],
+        [`${prereleaseType}-slim-rootless`, ver(version, "slim-rootless")],
         "rootless",
-        "BASE_IMAGE=louislam/uptime-kuma:base2-slim"
+        "BASE_IMAGE=ghcr.io/arnica-internal/uptime-kuma:base2-slim"
     );
 
     // Build full image (rootless)
-    buildImage(repoNames, ["beta-rootless", ver(version, "rootless")], "rootless");
+    buildImage(repoNames, [`${prereleaseType}-rootless`, ver(version, "rootless")], "rootless");
 
     // Build slim image
-    buildImage(repoNames, ["beta-slim", ver(version, "slim")], "release", "BASE_IMAGE=louislam/uptime-kuma:base2-slim");
+    buildImage(repoNames, [`${prereleaseType}-slim`, ver(version, "slim")], "release", "BASE_IMAGE=ghcr.io/arnica-internal/uptime-kuma:base2-slim");
 
     // Build full image
-    buildImage(repoNames, ["beta", version], "release");
+    buildImage(repoNames, [prereleaseType, version], "release");
 } else {
     console.log("Dry run mode - skipping image build and push.");
 }
