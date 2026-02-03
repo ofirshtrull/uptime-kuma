@@ -10,10 +10,11 @@ util.polyfill();
 
 const version = process.env.RELEASE_BETA_VERSION;
 
-console.log("Beta Version: " + version);
+console.log("Release Version: " + version);
 
-if (!version || !version.includes("-beta.")) {
-    console.error("invalid version, beta version only");
+// Allow any prerelease version (e.g., 2.2.0-beta.1, 2.2.0-sso, 2.2.0-rc.1)
+if (!version || !version.includes("-")) {
+    console.error("invalid version, prerelease version required (e.g., 2.2.0-beta.1, 2.2.0-sso)");
     process.exit(1);
 }
 
