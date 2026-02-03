@@ -308,7 +308,14 @@ export async function createDistTarGz() {
  * @returns {Promise<void>}
  */
 export async function createReleasePR(version, previousVersion, dryRun, branchName = "release", githubRunId = null) {
-    const changelog = await generateChangelog(previousVersion);
+    let changelog;
+    try {
+        changelog = await generateChangelog(previousVersion);
+    } catch (error) {
+        console.warn(`Warning: Could not generate changelog from ${previousVersion}: ${error.message}`);
+        console.warn("Continuing without changelog...");
+        changelog = `_Changelog generation skipped - previous version tag "${previousVersion}" not found._\n`;
+    }
 
     const title = dryRun ? `chore: update to ${version} (dry run)` : `chore: update to ${version}`;
 
