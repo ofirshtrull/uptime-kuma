@@ -156,7 +156,23 @@ class OktaAuthService {
             throw new Error("Okta configuration not initialized");
         }
 
-        // Find existing user by email/username
+        // Check if shared user mode is enabled (all Okta users share one account)
+        const sharedUsername = process.env.OKTA_SHARED_USER;
+        if (sharedUsername) {
+            const sharedUser = await R.findOne("user", "TRIM(username) = ? AND active = 1", [sharedUsername.trim()]);
+            if (sharedUser) {
+                log.info("okta-auth", "Okta user mapped to shared user", {
+                    oktaEmail: oktaUser.email,
+                    sharedUser: sharedUsername,
+                });
+                return sharedUser;
+            } else {
+                log.error("okta-auth", "Shared user not found", { sharedUser: sharedUsername });
+                return null;
+            }
+        }
+
+        // Individual user mode: Find existing user by email/username
         let user = await R.findOne("user", "TRIM(username) = ? AND active = 1", [oktaUser.email.trim()]);
 
         if (!user) {

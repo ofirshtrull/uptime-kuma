@@ -7,8 +7,8 @@ This guide explains how to configure Okta SAML SSO authentication for Uptime Kum
 With Okta SSO enabled:
 
 - Users authenticate via Okta instead of local username/password
-- Users are automatically created in Uptime Kuma when they first log in (if `OKTA_AUTO_CREATE_USERS=true`)
-- Each user has their own isolated monitoring configurations (monitors, notifications, etc.)
+- **Shared mode (recommended)**: All Okta users share the same monitors, notifications, and settings by mapping to a single admin account
+- **Individual mode**: Each user has their own isolated monitoring configurations (if `OKTA_AUTO_CREATE_USERS=true`)
 - Existing local authentication continues to work alongside Okta SSO
 
 ## Prerequisites
@@ -61,7 +61,14 @@ OKTA_CALLBACK_URL=https://your-uptime-kuma-domain.com/auth/okta/callback
 # Session secret (change this in production!)
 SESSION_SECRET=your-random-session-secret-change-this-in-production
 
-# Auto-create users from Okta (optional, default: false)
+# SHARED USER MODE (recommended): All Okta users map to this single user account
+# This allows all team members to access and modify the same monitors
+# Set this to the username of your admin account (e.g., "admin")
+OKTA_SHARED_USER=admin
+
+# INDIVIDUAL USER MODE: Auto-create separate users from Okta (optional, default: false)
+# Only used if OKTA_SHARED_USER is not set
+# Each user will have their own isolated monitors
 OKTA_AUTO_CREATE_USERS=true
 ```
 
