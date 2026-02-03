@@ -236,6 +236,9 @@ let needSetup = false;
     await Prometheus.init();
 
     // Initialize Okta authentication if configured
+    // Store session middleware reference for socket.io sharing
+    let sessionMiddleware = null;
+
     if (process.env.AUTH_PROVIDER === "okta") {
         // Require session and passport only when Okta is enabled
         const session = require("express-session");
@@ -253,25 +256,30 @@ let needSetup = false;
         // Use secure cookies if running with SSL OR if OKTA_CALLBACK_URL starts with https
         const useSecureCookies = isSSL || (process.env.OKTA_CALLBACK_URL || "").startsWith("https");
 
-        // Session middleware (required for Okta SSO)
-        app.use(
-            session({
-                secret: process.env.SESSION_SECRET || "uptime-kuma-session-secret-change-in-production",
-                resave: false,
-                saveUninitialized: false,
-                proxy: true, // Required when behind a proxy with secure cookies
-                cookie: {
-                    secure: useSecureCookies,
-                    httpOnly: true,
-                    sameSite: "lax", // Required for SAML POST callback
-                    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-                },
-            })
-        );
+        // Create session middleware (store reference for socket.io)
+        sessionMiddleware = session({
+            secret: process.env.SESSION_SECRET || "uptime-kuma-session-secret-change-in-production",
+            resave: false,
+            saveUninitialized: false,
+            proxy: true, // Required when behind a proxy with secure cookies
+            cookie: {
+                secure: useSecureCookies,
+                httpOnly: true,
+                sameSite: "lax", // Required for SAML POST callback
+                maxAge: 24 * 60 * 60 * 1000, // 24 hours
+            },
+        });
+
+        // Apply session middleware to Express
+        app.use(sessionMiddleware);
 
         // Initialize Passport
         app.use(passport.initialize());
         app.use(passport.session());
+
+        // Share session with socket.io
+        // This runs the session middleware on socket handshake to populate socket.request.session
+        io.engine.use(sessionMiddleware);
 
         const oktaConfig = oktaAuth.constructor.createConfigFromEnv();
         if (oktaConfig) {
@@ -457,20 +465,6 @@ let needSetup = false;
     });
 
     log.debug("server", "Adding socket handler");
-
-    // Share session middleware with socket.io (only when Okta is enabled)
-    if (process.env.AUTH_PROVIDER === "okta") {
-        io.use((socket, next) => {
-            const req = socket.request;
-            // Use the same session middleware
-            if (req.session) {
-                next();
-            } else {
-                // If no session middleware, still allow connection (for non-Okta auth)
-                next();
-            }
-        });
-    }
 
     io.on("connection", async (socket) => {
         await sendInfo(socket, true);
