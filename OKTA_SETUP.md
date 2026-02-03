@@ -66,6 +66,10 @@ SESSION_SECRET=your-random-session-secret-change-this-in-production
 # Set this to the username of your admin account (e.g., "admin")
 OKTA_SHARED_USER=admin
 
+# DISABLE LOCAL AUTH: Hide username/password login when Okta is enabled (optional, default: false)
+# Set to "true" to only show the Okta SSO login button
+OKTA_DISABLE_LOCAL_AUTH=true
+
 # INDIVIDUAL USER MODE: Auto-create separate users from Okta (optional, default: false)
 # Only used if OKTA_SHARED_USER is not set
 # Each user will have their own isolated monitors
@@ -104,7 +108,8 @@ node server/server.js
 ### User Management
 
 - **First-time users**: If `OKTA_AUTO_CREATE_USERS=true`, users are automatically created in Uptime Kuma when they first log in via Okta
-- **Existing users**: Users can continue using local authentication even when Okta is enabled
+- **Existing users**: Users can continue using local authentication even when Okta is enabled (unless `OKTA_DISABLE_LOCAL_AUTH=true`)
+- **Disable local auth**: Set `OKTA_DISABLE_LOCAL_AUTH=true` to hide the username/password login form and force Okta SSO only
 - **User isolation**: Each user's monitors, notifications, and other configurations are isolated by `user_id`
 
 ### Multi-User Support

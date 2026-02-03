@@ -5,7 +5,7 @@
                 <a :href="oktaLoginUrl" class="w-100 btn btn-primary">
                     {{ $t("Login with Okta") }}
                 </a>
-                <div class="text-center mt-3 mb-3">
+                <div v-if="!disableLocalAuth" class="text-center mt-3 mb-3">
                     <span class="text-muted">{{ $t("or") }}</span>
                 </div>
             </div>
@@ -13,7 +13,7 @@
             <form @submit.prevent="submit">
                 <h1 class="h3 mb-3 fw-normal" />
 
-                <div v-if="!tokenRequired" class="form-floating">
+                <div v-if="!tokenRequired && !disableLocalAuth" class="form-floating">
                     <input
                         id="floatingInput"
                         v-model="username"
@@ -26,7 +26,7 @@
                     <label for="floatingInput">{{ $t("Username") }}</label>
                 </div>
 
-                <div v-if="!tokenRequired" class="form-floating mt-3">
+                <div v-if="!tokenRequired && !disableLocalAuth" class="form-floating mt-3">
                     <input
                         id="floatingPassword"
                         v-model="password"
@@ -57,7 +57,7 @@
                 </div>
 
                 <div
-                    v-if="!oktaEnabled || (!tokenRequired && (username || password))"
+                    v-if="!disableLocalAuth && (!oktaEnabled || (!tokenRequired && (username || password)))"
                     class="form-check mb-3 mt-3 d-flex justify-content-center pe-4"
                 >
                     <div class="form-check">
@@ -75,7 +75,7 @@
                     </div>
                 </div>
                 <button
-                    v-if="!oktaEnabled || (!tokenRequired && (username || password))"
+                    v-if="!disableLocalAuth && (!oktaEnabled || (!tokenRequired && (username || password)))"
                     class="w-100 btn btn-primary"
                     type="submit"
                     :disabled="processing"
@@ -105,6 +105,7 @@ export default {
             tokenRequired: false,
             oktaEnabled: false,
             oktaLoginUrl: "/auth/okta",
+            disableLocalAuth: false,
         };
     },
 
@@ -127,10 +128,12 @@ export default {
             if (response.data.enabled) {
                 this.oktaEnabled = true;
                 this.oktaLoginUrl = response.data.loginUrl || "/auth/okta";
+                this.disableLocalAuth = response.data.disableLocalAuth || false;
             }
         } catch (error) {
             // Okta not enabled or error checking
             this.oktaEnabled = false;
+            this.disableLocalAuth = false;
         }
     },
 

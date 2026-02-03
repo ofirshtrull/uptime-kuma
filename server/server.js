@@ -418,7 +418,8 @@ let needSetup = false;
 
         // API endpoint to check if Okta is enabled
         app.get("/api/okta-enabled", (req, res) => {
-            res.json({ enabled: true, loginUrl: "/auth/okta" });
+            const disableLocalAuth = process.env.OKTA_DISABLE_LOCAL_AUTH === "true";
+            res.json({ enabled: true, loginUrl: "/auth/okta", disableLocalAuth });
         });
 
         // Initiate Okta login
