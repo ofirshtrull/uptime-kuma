@@ -241,15 +241,29 @@ let needSetup = false;
         const session = require("express-session");
         const passport = require("passport");
 
+        // Trust proxy when behind a load balancer (ALB, nginx, etc.)
+        // This allows Express to trust X-Forwarded-* headers
+        app.set("trust proxy", 1);
+
+        // Parse URL-encoded bodies (required for SAML POST callback)
+        // This MUST be before passport middleware
+        app.use(express.urlencoded({ extended: true }));
+
+        // Determine if we should use secure cookies
+        // Use secure cookies if running with SSL OR if OKTA_CALLBACK_URL starts with https
+        const useSecureCookies = isSSL || (process.env.OKTA_CALLBACK_URL || "").startsWith("https");
+
         // Session middleware (required for Okta SSO)
         app.use(
             session({
                 secret: process.env.SESSION_SECRET || "uptime-kuma-session-secret-change-in-production",
                 resave: false,
                 saveUninitialized: false,
+                proxy: true, // Required when behind a proxy with secure cookies
                 cookie: {
-                    secure: isSSL,
+                    secure: useSecureCookies,
                     httpOnly: true,
+                    sameSite: "lax", // Required for SAML POST callback
                     maxAge: 24 * 60 * 60 * 1000, // 24 hours
                 },
             })
