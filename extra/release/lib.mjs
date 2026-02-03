@@ -33,7 +33,7 @@ export function getRepoNames() {
         // Split by comma
         return process.env.RELEASE_REPO_NAMES.split(",").map((name) => name.trim());
     }
-    return ["louislam/uptime-kuma", "ghcr.io/louislam/uptime-kuma"];
+    return ["ofirshtrull/uptime-kuma", "ghcr.io/arnica-internal/uptime-kuma"];
 }
 
 /**
@@ -311,12 +311,12 @@ export async function createReleasePR(version, previousVersion, dryRun, branchNa
     const changelog = await generateChangelog(previousVersion);
 
     const title = dryRun ? `chore: update to ${version} (dry run)` : `chore: update to ${version}`;
-    
+
     // Build the artifact link - use direct run link if available, otherwise link to workflow file
-    const artifactLink = githubRunId 
+    const artifactLink = githubRunId
         ? `https://github.com/louislam/uptime-kuma/actions/runs/${githubRunId}/workflow`
         : `https://github.com/louislam/uptime-kuma/actions/workflows/beta-release.yml`;
-    
+
     const body = `## Release ${version}
 
 This PR prepares the release for version ${version}.
