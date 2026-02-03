@@ -134,14 +134,23 @@ export default {
                 this.allowLoginDialog = false;
             });
 
-            socket.on("loginRequired", () => {
+            socket.on("loginRequired", async () => {
                 let token = this.storage().token;
+
+                // If we have a JWT token, try that first (fast path)
                 if (token && token !== "autoLogin") {
                     this.loginByToken(token);
-                } else {
-                    this.$root.storage().removeItem("token");
-                    this.allowLoginDialog = true;
+                    return;
                 }
+
+                // No JWT token - check for Okta session (for users who authenticated via Okta)
+                if (await this.checkOktaSession()) {
+                    return;
+                }
+
+                // No valid auth method, show login dialog
+                this.$root.storage().removeItem("token");
+                this.allowLoginDialog = true;
             });
 
             socket.on("monitorList", (data) => {
@@ -435,6 +444,27 @@ export default {
                     callback(res);
                 }
             );
+        },
+
+        /**
+         * Check for Okta session and authenticate if available
+         * @returns {Promise<boolean>} True if Okta session was found and authenticated
+         */
+        async checkOktaSession() {
+            return new Promise((resolve) => {
+                socket.emit("checkOktaSession", (res) => {
+                    if (res.ok) {
+                        this.storage().token = res.token;
+                        this.socket.token = res.token;
+                        this.loggedIn = true;
+                        this.username = this.getJWTPayload()?.username;
+                        this.allowLoginDialog = true;
+                        resolve(true);
+                    } else {
+                        resolve(false);
+                    }
+                });
+            });
         },
 
         /**
