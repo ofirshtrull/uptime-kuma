@@ -64,14 +64,14 @@ if (!dryRun) {
         repoNames,
         [`${prereleaseType}-slim-rootless`, ver(version, "slim-rootless")],
         "rootless",
-        "BASE_IMAGE=ghcr.io/arnica-internal/uptime-kuma:base2-slim"
+        "BASE_IMAGE=ofirshtrull/uptime-kuma:base2-slim"
     );
 
     // Build full image (rootless)
     buildImage(repoNames, [`${prereleaseType}-rootless`, ver(version, "rootless")], "rootless");
 
     // Build slim image
-    buildImage(repoNames, [`${prereleaseType}-slim`, ver(version, "slim")], "release", "BASE_IMAGE=ghcr.io/arnica-internal/uptime-kuma:base2-slim");
+    buildImage(repoNames, [`${prereleaseType}-slim`, ver(version, "slim")], "release", "BASE_IMAGE=ofirshtrull/uptime-kuma:base2-slim");
 
     // Build full image
     buildImage(repoNames, [prereleaseType, version], "release");
