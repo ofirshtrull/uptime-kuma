@@ -1,0 +1,835 @@
+/* =====================================================
+   ARNICA STATUS PAGE - CUSTOM CSS
+   For Uptime Kuma Status Page
+
+   100% ARNICA BRAND COLORS (from ui-vue/src/assets/scss)
+
+   PRIMARY:
+   - Primary: #40bca3
+   - Primary text dark: #5cc9b3 (lighten 10%)
+   - Primary text light: #2d8a78 (darken 15%)
+
+   DARK MODE:
+   - Background: #02040a
+   - Background lighter: #0d1116
+   - Panel background: #161a1e
+   - Border: #2f3139
+   - Text primary: #e6edf3
+   - Text secondary: #9ea0a2
+   - Text muted: #747678
+
+   LIGHT MODE:
+   - Background: #ffffff
+   - Background alt: #fafcfe
+   - Panel background: #eef0f2
+   - Border: #d0d7de
+   - Text primary: #0d1116
+   - Text secondary: #606468
+   - Text muted: #9ea0a2
+
+   STATUS COLORS (dark):
+   - Critical/Down: #e62e26
+   - High: #e06b21
+   - Warning/Medium: #d79c21
+   - Info/Up: #608f53
+
+   STATUS COLORS (light):
+   - Critical/Down: #d0104a
+   - High: #ea7602
+   - Warning/Medium: #daae00
+   - Info/Up: #639d65
+===================================================== */
+
+/* ===== DARK MODE STYLES ===== */
+@media (prefers-color-scheme: dark) {
+
+  /* Page background - Arnica dark */
+  body,
+  .container,
+  #app,
+  html {
+    background-color: #02040a !important;
+    color: #e6edf3 !important;
+  }
+
+  /* Cards/Panels/Shadow boxes - Arnica panel */
+  .shadow-box,
+  .bg-light,
+  .card,
+  .monitor-list,
+  .list-group-item,
+  .bg-secondary {
+    background-color: #161a1e !important;
+    border: 1px solid #2f3139 !important;
+    color: #e6edf3 !important;
+  }
+
+  /* Secondary background elements */
+  .bg-dark,
+  .navbar,
+  .header {
+    background-color: #0d1116 !important;
+  }
+
+  /* Page title / headers */
+  h1, h2, h3, h4, h5, h6,
+  .group-title,
+  .title,
+  .fw-bold {
+    color: #e6edf3 !important;
+  }
+
+  /* Main status page title - Arnica primary */
+  .status-page-title,
+  h1.title,
+  .page-title {
+    color: #40bca3 !important;
+  }
+
+  /* ===== OVERALL STATUS BANNER ===== */
+
+  /* Operational - Arnica primary teal */
+  .overall-status,
+  .overall-status.ok,
+  .overall-status.up,
+  .bg-success,
+  .alert-success {
+    background-color: #40bca3 !important;
+    color: #02040a !important;
+    border: none !important;
+  }
+
+  /* Degraded/Warning - Arnica warning */
+  .overall-status.warn,
+  .overall-status.warning,
+  .overall-status.partial,
+  .bg-warning,
+  .alert-warning {
+    background-color: #d79c21 !important;
+    color: #02040a !important;
+  }
+
+  /* Down/Danger - Arnica critical */
+  .overall-status.danger,
+  .overall-status.down,
+  .bg-danger,
+  .alert-danger {
+    background-color: #e62e26 !important;
+    color: #ffffff !important;
+  }
+
+  /* ===== STATUS BADGES ===== */
+
+  /* Up/Operational badge */
+  .badge.bg-primary,
+  .badge.bg-success,
+  .badge-success,
+  .badge.rounded-pill,
+  .badge.up {
+    background-color: #40bca3 !important;
+    color: #02040a !important;
+    font-weight: 600 !important;
+  }
+
+  /* Warning badge */
+  .badge.bg-warning,
+  .badge-warning,
+  .badge.warn {
+    background-color: #d79c21 !important;
+    color: #02040a !important;
+  }
+
+  /* Danger/Down badge */
+  .badge.bg-danger,
+  .badge-danger,
+  .badge.down {
+    background-color: #e62e26 !important;
+    color: #ffffff !important;
+  }
+
+  /* ===== HEARTBEAT BARS ===== */
+
+  /* Up - Arnica primary */
+  .beat.up,
+  .beat-up,
+  .hp-bar .beat.up {
+    background-color: #40bca3 !important;
+  }
+
+  /* Down - Arnica critical */
+  .beat.down,
+  .beat-down,
+  .hp-bar .beat.down {
+    background-color: #e62e26 !important;
+  }
+
+  /* Pending/Unknown */
+  .beat.pending,
+  .beat.unknown,
+  .hp-bar .beat.pending {
+    background-color: #747678 !important;
+  }
+
+  /* Maintenance - Arnica warning */
+  .beat.maintenance,
+  .hp-bar .beat.maintenance {
+    background-color: #d79c21 !important;
+  }
+
+  /* Empty/No data */
+  .beat.empty,
+  .hp-bar .beat.empty {
+    background-color: #2f3139 !important;
+  }
+
+  /* ===== MONITOR ITEMS ===== */
+
+  .monitor-name,
+  .item-name,
+  .monitor-list-item .title,
+  .item .title {
+    color: #e6edf3 !important;
+  }
+
+  .item,
+  .monitor-list-item {
+    border-color: #2f3139 !important;
+  }
+
+  /* ===== LINKS - Arnica primary text dark ===== */
+  a {
+    color: #5cc9b3 !important;
+  }
+
+  a:hover {
+    color: #40bca3 !important;
+  }
+
+  /* ===== FOOTER ===== */
+  .footer,
+  .credit,
+  footer,
+  .powered-by {
+    color: #9ea0a2 !important;
+  }
+
+  /* ===== INCIDENT CARDS ===== */
+
+  /* Pinned incident / incident card */
+  .incident-card,
+  .incident,
+  .pin-section,
+  .shadow-box.incident,
+  .incident-list .shadow-box {
+    background-color: #161a1e !important;
+    border: 1px solid #2f3139 !important;
+    border-left: 3px solid #40bca3 !important;
+  }
+
+  /* Incident title */
+  .incident-title,
+  .incident h3,
+  .incident h4,
+  .incident-card h3,
+  .incident-card h4,
+  .pin-section h4,
+  .shadow-box h4 {
+    color: #e6edf3 !important;
+  }
+
+  /* Incident content */
+  .incident-content,
+  .incident p,
+  .incident-card p,
+  .incident span,
+  .incident-card span,
+  .incident .content,
+  .incident-card .content,
+  .pin-section p,
+  .pin-section span,
+  .shadow-box p,
+  .shadow-box span {
+    color: #bcbec0 !important;
+  }
+
+  /* Incident dates */
+  .incident-date,
+  .incident .date,
+  .incident-card .date,
+  .incident small,
+  .incident-card small,
+  .pin-section small,
+  .shadow-box small,
+  .date-created {
+    color: #747678 !important;
+  }
+
+  /* Past incidents header */
+  .past-incidents-header,
+  .incident-header,
+  .section-title {
+    color: #e6edf3 !important;
+  }
+
+  /* Incident date group */
+  .date-header,
+  .incident-group-date {
+    color: #9ea0a2 !important;
+  }
+
+  /* Text utilities */
+  .text-muted {
+    color: #747678 !important;
+  }
+
+  .text-secondary {
+    color: #9ea0a2 !important;
+  }
+
+  /* ===== BUTTONS ===== */
+
+  /* Primary button */
+  .btn-primary,
+  .btn.btn-primary {
+    background-color: #40bca3 !important;
+    border-color: #40bca3 !important;
+    color: #02040a !important;
+  }
+
+  .btn-primary:hover {
+    background-color: #5cc9b3 !important;
+    border-color: #5cc9b3 !important;
+  }
+
+  /* Outline button */
+  .btn-outline-primary {
+    border-color: #40bca3 !important;
+    color: #40bca3 !important;
+    background-color: transparent !important;
+  }
+
+  .btn-outline-primary:hover {
+    background-color: #40bca3 !important;
+    color: #02040a !important;
+  }
+
+  /* ===== FORMS ===== */
+
+  input, select, textarea,
+  .form-control {
+    background-color: #0d1116 !important;
+    border-color: #2f3139 !important;
+    color: #e6edf3 !important;
+  }
+}
+
+/* ===== LIGHT MODE STYLES ===== */
+@media (prefers-color-scheme: light) {
+
+  /* Page background */
+  body,
+  .container,
+  #app,
+  html {
+    background-color: #fafcfe !important;
+    color: #0d1116 !important;
+  }
+
+  /* Cards/Panels */
+  .shadow-box,
+  .bg-light,
+  .card,
+  .monitor-list,
+  .list-group-item {
+    background-color: #ffffff !important;
+    border: 1px solid #d0d7de !important;
+    color: #0d1116 !important;
+  }
+
+  /* Secondary background */
+  .bg-secondary {
+    background-color: #eef0f2 !important;
+  }
+
+  /* Page title / headers */
+  h1, h2, h3, h4, h5, h6,
+  .group-title,
+  .title,
+  .fw-bold {
+    color: #0d1116 !important;
+  }
+
+  /* Main status page title */
+  .status-page-title,
+  h1.title,
+  .page-title {
+    color: #2d8a78 !important;
+  }
+
+  /* ===== OVERALL STATUS BANNER ===== */
+
+  /* Operational */
+  .overall-status,
+  .overall-status.ok,
+  .overall-status.up,
+  .bg-success,
+  .alert-success {
+    background-color: #40bca3 !important;
+    color: #ffffff !important;
+    border: none !important;
+  }
+
+  /* Degraded/Warning */
+  .overall-status.warn,
+  .overall-status.warning,
+  .overall-status.partial,
+  .bg-warning,
+  .alert-warning {
+    background-color: #daae00 !important;
+    color: #0d1116 !important;
+  }
+
+  /* Down/Danger */
+  .overall-status.danger,
+  .overall-status.down,
+  .bg-danger,
+  .alert-danger {
+    background-color: #d0104a !important;
+    color: #ffffff !important;
+  }
+
+  /* ===== STATUS BADGES ===== */
+
+  .badge.bg-primary,
+  .badge.bg-success,
+  .badge-success,
+  .badge.rounded-pill,
+  .badge.up {
+    background-color: #40bca3 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+  }
+
+  .badge.bg-warning,
+  .badge-warning,
+  .badge.warn {
+    background-color: #daae00 !important;
+    color: #0d1116 !important;
+  }
+
+  .badge.bg-danger,
+  .badge-danger,
+  .badge.down {
+    background-color: #d0104a !important;
+    color: #ffffff !important;
+  }
+
+  /* ===== HEARTBEAT BARS ===== */
+
+  .beat.up,
+  .beat-up,
+  .hp-bar .beat.up {
+    background-color: #40bca3 !important;
+  }
+
+  .beat.down,
+  .beat-down,
+  .hp-bar .beat.down {
+    background-color: #d0104a !important;
+  }
+
+  .beat.pending,
+  .beat.unknown {
+    background-color: #9ea0a2 !important;
+  }
+
+  .beat.maintenance {
+    background-color: #daae00 !important;
+  }
+
+  .beat.empty {
+    background-color: #e0e2e4 !important;
+  }
+
+  /* ===== MONITOR ITEMS ===== */
+
+  .monitor-name,
+  .item-name,
+  .monitor-list-item .title,
+  .item .title {
+    color: #0d1116 !important;
+  }
+
+  .item,
+  .monitor-list-item {
+    border-color: #d0d7de !important;
+  }
+
+  /* ===== LINKS ===== */
+  a {
+    color: #2d8a78 !important;
+  }
+
+  a:hover {
+    color: #40bca3 !important;
+  }
+
+  /* ===== FOOTER ===== */
+  .footer,
+  .credit,
+  footer,
+  .powered-by {
+    color: #606468 !important;
+  }
+
+  /* ===== INCIDENT CARDS ===== */
+
+  .incident-card,
+  .incident,
+  .pin-section,
+  .shadow-box.incident,
+  .incident-list .shadow-box {
+    background-color: #ffffff !important;
+    border: 1px solid #d0d7de !important;
+    border-left: 3px solid #40bca3 !important;
+  }
+
+  .incident-title,
+  .incident h3,
+  .incident h4,
+  .incident-card h3,
+  .incident-card h4,
+  .pin-section h4,
+  .shadow-box h4 {
+    color: #0d1116 !important;
+  }
+
+  .incident-content,
+  .incident p,
+  .incident-card p,
+  .incident span,
+  .incident-card span,
+  .incident .content,
+  .incident-card .content,
+  .pin-section p,
+  .pin-section span,
+  .shadow-box p,
+  .shadow-box span {
+    color: #606468 !important;
+  }
+
+  .incident-date,
+  .incident .date,
+  .incident-card .date,
+  .incident small,
+  .incident-card small,
+  .pin-section small,
+  .shadow-box small,
+  .date-created {
+    color: #9ea0a2 !important;
+  }
+
+  .past-incidents-header,
+  .incident-header,
+  .section-title {
+    color: #0d1116 !important;
+  }
+
+  .date-header,
+  .incident-group-date {
+    color: #606468 !important;
+  }
+
+  .text-muted {
+    color: #9ea0a2 !important;
+  }
+
+  /* ===== BUTTONS ===== */
+
+  .btn-primary,
+  .btn.btn-primary {
+    background-color: #40bca3 !important;
+    border-color: #40bca3 !important;
+    color: #ffffff !important;
+  }
+
+  .btn-primary:hover {
+    background-color: #2d8a78 !important;
+    border-color: #2d8a78 !important;
+  }
+
+  .btn-outline-primary {
+    border-color: #40bca3 !important;
+    color: #2d8a78 !important;
+    background-color: transparent !important;
+  }
+
+  .btn-outline-primary:hover {
+    background-color: #40bca3 !important;
+    color: #ffffff !important;
+  }
+}
+
+/* ===== FOOTER BUTTONS CONTAINER ===== */
+.footer-buttons {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  margin-bottom: 15px !important;
+  position: relative !important;
+  top: -30px !important;
+}
+
+/* ===== CONTACT SUPPORT BUTTON ===== */
+
+.support-email-btn {
+  display: inline-block !important;
+  padding: 8px 16px !important;
+  border-radius: 3px !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  transition: all 0.2s ease !important;
+  background-color: #40bca3 !important;
+  color: #ffffff !important;
+  border: 1px solid #2d8a78 !important;
+}
+
+.support-email-btn:hover {
+  background-color: #2d8a78 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  text-decoration: none !important;
+}
+
+.support-email-btn:visited,
+.support-email-btn:active,
+.support-email-btn:focus {
+  color: #ffffff !important;
+  text-decoration: none !important;
+}
+
+/* Dark mode button */
+@media (prefers-color-scheme: dark) {
+  .support-email-btn {
+    background-color: #40bca3 !important;
+    color: #02040a !important;
+    border: 1px solid #5cc9b3 !important;
+  }
+
+  .support-email-btn:hover {
+    background-color: #5cc9b3 !important;
+    color: #02040a !important;
+  }
+
+  .support-email-btn:visited,
+  .support-email-btn:active,
+  .support-email-btn:focus {
+    color: #02040a !important;
+  }
+}
+
+/* ===== RSS FEED BUTTON ===== */
+
+.rss-btn {
+  display: inline-block !important;
+  padding: 8px 16px !important;
+  border-radius: 3px !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  transition: all 0.2s ease !important;
+  background-color: transparent !important;
+  color: #40bca3 !important;
+  border: 1px solid #40bca3 !important;
+}
+
+.rss-btn:hover {
+  background-color: #40bca3 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  text-decoration: none !important;
+}
+
+.rss-btn:visited,
+.rss-btn:active,
+.rss-btn:focus {
+  color: #40bca3 !important;
+  text-decoration: none !important;
+}
+
+.rss-btn:hover:visited {
+  color: #ffffff !important;
+}
+
+/* Dark mode RSS button */
+@media (prefers-color-scheme: dark) {
+  .rss-btn {
+    background-color: transparent !important;
+    color: #5cc9b3 !important;
+    border: 1px solid #5cc9b3 !important;
+  }
+
+  .rss-btn:hover {
+    background-color: #40bca3 !important;
+    color: #02040a !important;
+    border-color: #40bca3 !important;
+  }
+
+  .rss-btn:visited,
+  .rss-btn:active,
+  .rss-btn:focus {
+    color: #5cc9b3 !important;
+  }
+
+  .rss-btn:hover:visited {
+    color: #02040a !important;
+  }
+}
+
+/* ===== UPTIME PERCENTAGE ===== */
+@media (prefers-color-scheme: dark) {
+  .uptime-text,
+  .uptime-value,
+  .uptime {
+    color: #e6edf3 !important;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .uptime-text,
+  .uptime-value,
+  .uptime {
+    color: #0d1116 !important;
+  }
+}
+
+/* ===== MAINTENANCE BANNER ===== */
+@media (prefers-color-scheme: dark) {
+  .maintenance-info,
+  .maintenance-banner {
+    background-color: #161a1e !important;
+    border: 1px solid #d79c21 !important;
+    color: #d79c21 !important;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .maintenance-info,
+  .maintenance-banner {
+    background-color: #fffbeb !important;
+    border: 1px solid #daae00 !important;
+    color: #856404 !important;
+  }
+}
+
+/* ===== SCROLLBAR (Dark Mode) ===== */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0d1116;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #2f3139;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #40bca3;
+  }
+}
+
+/* ===== GROUP HEADERS ===== */
+@media (prefers-color-scheme: dark) {
+  .group-name,
+  .monitor-group-name,
+  .group-header {
+    color: #e6edf3 !important;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .group-name,
+  .monitor-group-name,
+  .group-header {
+    color: #0d1116 !important;
+  }
+}
+
+/* ===== UPTIME KUMA SPECIFIC OVERRIDES ===== */
+
+/* Overall status banner icon/checkmark */
+@media (prefers-color-scheme: dark) {
+  .overall-status svg,
+  .overall-status i,
+  .overall-status .icon,
+  .overall-status path,
+  .overall-status .fa,
+  .overall-status .fas,
+  .overall-status .far,
+  .overall-status .bi,
+  .overall-status span.icon,
+  .bg-success svg,
+  .bg-success i,
+  .bg-success path,
+  .alert-success svg,
+  .alert-success i {
+    color: #02040a !important;
+    fill: #02040a !important;
+    stroke: #02040a !important;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .overall-status svg,
+  .overall-status i,
+  .overall-status .icon,
+  .overall-status path,
+  .overall-status .fa,
+  .overall-status .fas,
+  .overall-status .far,
+  .overall-status .bi,
+  .overall-status span.icon,
+  .bg-success svg,
+  .bg-success i,
+  .bg-success path,
+  .alert-success svg,
+  .alert-success i {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+    stroke: #ffffff !important;
+  }
+}
+
+/* Status indicator dots */
+.status-indicator.up,
+.indicator.up {
+  background-color: #40bca3 !important;
+}
+
+.status-indicator.down,
+.indicator.down {
+  background-color: #e62e26 !important;
+}
+
+/* Tooltip */
+@media (prefers-color-scheme: dark) {
+  .tooltip,
+  .tooltip-inner {
+    background-color: #606468 !important;
+    color: #e6edf3 !important;
+  }
+}
+
+/* Selection highlight */
+::selection {
+  background-color: #40bca3;
+  color: #02040a;
+}

@@ -1,0 +1,1 @@
+ALTER TABLE incident ADD COLUMN status VARCHAR(30);

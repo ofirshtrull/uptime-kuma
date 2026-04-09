@@ -327,7 +327,16 @@
                     :class="'bg-' + activeIncident.style"
                     data-testid="incident"
                 >
-                    <h4 class="alert-heading" data-testid="incident-title">{{ activeIncident.title }}</h4>
+                    <h4 class="alert-heading" data-testid="incident-title">
+                        {{ activeIncident.title }}
+                        <span
+                            v-if="activeIncident.status"
+                            class="incident-status-badge"
+                            :class="'incident-status-' + activeIncident.status"
+                        >
+                            {{ formatIncidentStatus(activeIncident.status) }}
+                        </span>
+                    </h4>
                     <!-- eslint-disable vue/no-v-html -->
                     <div
                         class="content"
@@ -1355,6 +1364,13 @@ export default {
                 return DOMPurify.sanitize(marked(content));
             }
             return "";
+        },
+
+        formatIncidentStatus(status) {
+            if (!status) {
+                return "";
+            }
+            return status.charAt(0).toUpperCase() + status.slice(1);
         },
 
         /**

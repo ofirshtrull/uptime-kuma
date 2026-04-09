@@ -97,8 +97,15 @@ class StatusPage extends BeanModel {
 
         if (incidents) {
             incidents.forEach((incident) => {
+                const statusLabel = incident.status
+                    ? incident.status.charAt(0).toUpperCase() + incident.status.slice(1)
+                    : null;
+                const titleWithStatus = statusLabel
+                    ? `[${statusLabel}] ${incident.title}`
+                    : incident.title;
+
                 feed.addItem({
-                    title: incident.title,
+                    title: titleWithStatus,
                     description: incident.content || incident.title,
                     id: `incident-${incident.id}-${incident.created_date}`,
                     link: feedUrl,

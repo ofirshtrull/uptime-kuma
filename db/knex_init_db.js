@@ -158,6 +158,7 @@ async function createTables() {
         table.boolean("pin").notNullable().defaultTo(true);
         table.boolean("active").notNullable().defaultTo(true);
         table.integer("status_page_id").unsigned();
+        table.string("status", 30);
     });
 
     // maintenance

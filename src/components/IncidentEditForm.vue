@@ -83,6 +83,40 @@
                     </li>
                 </ul>
             </div>
+
+            <div class="dropdown d-inline-block me-2">
+                <button
+                    id="dropdownStatusButton"
+                    class="btn btn-secondary dropdown-toggle"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                >
+                    Status: {{ statusLabel }}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownStatusButton">
+                    <li>
+                        <a class="dropdown-item" href="#" @click.prevent="updateField('status', 'investigating')">
+                            Investigating
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#" @click.prevent="updateField('status', 'identified')">
+                            Identified
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#" @click.prevent="updateField('status', 'monitoring')">
+                            Monitoring
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#" @click.prevent="updateField('status', 'resolved')">
+                            Resolved
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </template>
@@ -97,6 +131,15 @@ export default {
         },
     },
     emits: ["update:modelValue", "post", "cancel"],
+    computed: {
+        statusLabel() {
+            const s = this.modelValue.status;
+            if (!s) {
+                return "None";
+            }
+            return s.charAt(0).toUpperCase() + s.slice(1);
+        },
+    },
     methods: {
         updateField(field, value) {
             this.$emit("update:modelValue", {
