@@ -77,7 +77,7 @@ class StatusPage extends BeanModel {
      * @returns {Promise<string>} The rendered RSS XML
      */
     static async renderRSS(statusPage, feedUrl) {
-        const { heartbeats, statusDescription } = await StatusPage.getRSSPageData(statusPage);
+        const { heartbeats, incidents, statusDescription } = await StatusPage.getRSSPageData(statusPage);
 
         // Use custom RSS title if set, otherwise fall back to status page title
         let feedTitle = "Uptime Kuma RSS Feed";
@@ -91,9 +91,21 @@ class StatusPage extends BeanModel {
             title: feedTitle,
             description: `Current status: ${statusDescription}`,
             link: feedUrl,
-            language: "en", // optional, used only in RSS 2.0, possible values: http://www.w3.org/TR/REC-html40/struct/dirlang.html#langcodes
-            updated: new Date(), // optional, default = today
+            language: "en",
+            updated: new Date(),
         });
+
+        if (incidents) {
+            incidents.forEach((incident) => {
+                feed.addItem({
+                    title: incident.title,
+                    description: incident.content || incident.title,
+                    id: `incident-${incident.id}-${incident.created_date}`,
+                    link: feedUrl,
+                    date: dayjs.utc(incident.created_date).toDate(),
+                });
+            });
+        }
 
         heartbeats.forEach((heartbeat) => {
             feed.addItem({
@@ -264,10 +276,8 @@ class StatusPage extends BeanModel {
      * @returns {object} Status page data
      */
     static async getRSSPageData(statusPage) {
-        // get all heartbeats that correspond to this statusPage
         const config = await statusPage.toPublicJSON();
 
-        // Public Group List
         const showTags = !!statusPage.show_tags;
 
         const list = await R.find("group", " public = 1 AND status_page_id = ? ORDER BY weight ", [statusPage.id]);
@@ -276,6 +286,12 @@ class StatusPage extends BeanModel {
 
         for (let groupBean of list) {
             let monitorGroup = await groupBean.toPublicJSON(showTags, config?.showCertificateExpiry);
+
+            // Skip groups with "external" in name from RSS feed
+            if (monitorGroup.name && monitorGroup.name.toLowerCase().includes("external")) {
+                continue;
+            }
+
             for (const monitor of monitorGroup.monitorList) {
                 const heartbeat = await R.findOne("heartbeat", "monitor_id = ? ORDER BY time DESC", [monitor.id]);
                 if (heartbeat) {
@@ -288,15 +304,21 @@ class StatusPage extends BeanModel {
             }
         }
 
-        // calculate RSS feed description
         let status = StatusPage.overallStatus(heartbeats);
         let statusDescription = StatusPage.getStatusDescription(status);
 
-        // keep only DOWN heartbeats in the RSS feed
         heartbeats = heartbeats.filter((heartbeat) => heartbeat.status === DOWN);
+
+        // Include manually created incidents
+        let incidents = await R.find(
+            "incident",
+            " active = 1 AND status_page_id = ? ORDER BY created_date DESC",
+            [statusPage.id]
+        );
 
         return {
             heartbeats,
+            incidents,
             statusDescription,
         };
     }
