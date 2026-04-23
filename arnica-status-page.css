@@ -86,12 +86,15 @@
     color: #40bca3 !important;
   }
 
-  /* ===== OVERALL STATUS BANNER ===== */
+  /* ===== OVERALL STATUS BANNER =====
+     Uptime Kuma's StatusPage.vue always renders the banner as
+     `<div class="shadow-box ... overall-status mb-4">` with NO state-modifying
+     class on the outer div. The state is only expressed via the inner icon's
+     class (`.ok` / `.warning` / `.danger` / `.status-maintenance`).
+     We therefore key off the inner icon using :has(). */
 
   /* Operational - Arnica primary teal */
-  .overall-status,
-  .overall-status.ok,
-  .overall-status.up,
+  .overall-status:has(.ok),
   .bg-success,
   .alert-success {
     background-color: #40bca3 !important;
@@ -100,23 +103,41 @@
   }
 
   /* Degraded/Warning - Arnica warning */
-  .overall-status.warn,
-  .overall-status.warning,
-  .overall-status.partial,
+  .overall-status:has(.warning),
   .bg-warning,
   .alert-warning {
     background-color: #d79c21 !important;
     color: #02040a !important;
+    border: none !important;
   }
 
   /* Down/Danger - Arnica critical */
-  .overall-status.danger,
-  .overall-status.down,
+  .overall-status:has(.danger),
   .bg-danger,
   .alert-danger {
     background-color: #e62e26 !important;
     color: #ffffff !important;
+    border: none !important;
   }
+
+  /* Maintenance - Arnica warning (muted) */
+  .overall-status:has(.status-maintenance),
+  .bg-maintenance {
+    background-color: #d79c21 !important;
+    color: #02040a !important;
+    border: none !important;
+  }
+
+  /* Make the inner status icon legible against the colored banner.
+     Uptime Kuma's scoped styles color these icons (teal/yellow/red),
+     which becomes invisible on a same-colored background. */
+  .overall-status :is(.ok, .warning, .danger, .status-maintenance) {
+    color: inherit !important;
+  }
+
+  /* Loading / unknown state (StatusPage.vue v-else): renders a
+     question-circle with inline `style="color: #efefef"` and no state
+     class. The off-white inline color is fine on the dark panel. */
 
   /* ===== STATUS BADGES ===== */
 
@@ -366,12 +387,11 @@
     color: #2d8a78 !important;
   }
 
-  /* ===== OVERALL STATUS BANNER ===== */
+  /* ===== OVERALL STATUS BANNER =====
+     See the dark-mode block above for an explanation of the :has() approach. */
 
   /* Operational */
-  .overall-status,
-  .overall-status.ok,
-  .overall-status.up,
+  .overall-status:has(.ok),
   .bg-success,
   .alert-success {
     background-color: #40bca3 !important;
@@ -380,22 +400,45 @@
   }
 
   /* Degraded/Warning */
-  .overall-status.warn,
-  .overall-status.warning,
-  .overall-status.partial,
+  .overall-status:has(.warning),
   .bg-warning,
   .alert-warning {
     background-color: #daae00 !important;
     color: #0d1116 !important;
+    border: none !important;
   }
 
   /* Down/Danger */
-  .overall-status.danger,
-  .overall-status.down,
+  .overall-status:has(.danger),
   .bg-danger,
   .alert-danger {
     background-color: #d0104a !important;
     color: #ffffff !important;
+    border: none !important;
+  }
+
+  /* Maintenance */
+  .overall-status:has(.status-maintenance),
+  .bg-maintenance {
+    background-color: #daae00 !important;
+    color: #0d1116 !important;
+    border: none !important;
+  }
+
+  /* Keep the inner icon legible on the colored banner */
+  .overall-status :is(.ok, .warning, .danger, .status-maintenance) {
+    color: inherit !important;
+  }
+
+  /* Loading / unknown state (StatusPage.vue v-else): the inline
+     `style="color: #efefef"` on the question-circle has poor contrast
+     against the white panel in light mode. Force a readable muted gray.
+     Note: the "No Services" branch uses `class="ok"` on its
+     question-circle, so it is excluded here and gets the operational
+     teal treatment via the rule above. */
+  .overall-status svg[data-icon="question-circle"]:not(.ok):not(.warning):not(.danger):not(.status-maintenance),
+  .overall-status .fa-question-circle:not(.ok):not(.warning):not(.danger):not(.status-maintenance) {
+    color: #606468 !important;
   }
 
   /* ===== STATUS BADGES ===== */
@@ -567,6 +610,23 @@
   .btn-outline-primary:hover {
     background-color: #40bca3 !important;
     color: #ffffff !important;
+  }
+}
+
+/* ===== OVERALL STATUS BANNER - GRACEFUL DEGRADATION =====
+   On browsers without CSS :has() support (Firefox <121 / Chrome <105 /
+   Safari <15.4), all `.overall-status:has(...)` rules above are dropped
+   and the banner falls back to the neutral `.shadow-box` panel color.
+   Uptime Kuma's own scoped CSS still colors the inner state icon
+   (.ok=teal, .warning=yellow, .danger=red), so state is still
+   readable -- we just lose the full-bleed background.
+
+   To make the icon-only signal more prominent on those browsers, bump
+   the icon size and weight when :has() is unsupported. */
+@supports not selector(:has(*)) {
+  .overall-status :is(.ok, .warning, .danger, .status-maintenance) {
+    font-size: 1.4em !important;
+    margin-right: 6px !important;
   }
 }
 
@@ -763,50 +823,100 @@
   }
 }
 
+/* ===== 2-COLUMN MONITOR GRID (GitHub-style, desktop only) ===== */
+
+@media (min-width: 992px) {
+  .shadow-box.monitor-list > .monitor-list {
+    display: grid !important;
+    /* minmax(0, 1fr) -- not bare 1fr -- so columns can shrink below the
+       heartbeat bar's intrinsic min-content width and don't overflow the
+       container in narrow layouts (e.g. edit mode with the sidebar). */
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0 !important;
+  }
+
+  /* Single-item groups span full width */
+  .shadow-box.monitor-list > .monitor-list > .item:only-child {
+    grid-column: 1 / -1 !important;
+  }
+
+  /* Grid items: border styling.
+     min-width: 0 lets the cell shrink so its overflowing children
+     (heartbeat bar) get clipped/scaled instead of pushing the grid wide. */
+  .shadow-box.monitor-list > .monitor-list > .item {
+    border-bottom: 1px solid #2f3139 !important;
+    border-right: 1px solid #2f3139 !important;
+    padding: 12px 15px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Remove right border on right column */
+  .shadow-box.monitor-list > .monitor-list > .item:nth-child(2n) {
+    border-right: none !important;
+  }
+
+  /* Remove bottom border on last row */
+  .shadow-box.monitor-list > .monitor-list > .item:last-child,
+  .shadow-box.monitor-list > .monitor-list > .item:nth-last-child(2):nth-child(odd) {
+    border-bottom: none !important;
+  }
+
+  /* Stack info and heartbeat vertically */
+  .shadow-box.monitor-list > .monitor-list > .item > .row {
+    flex-direction: column !important;
+    /* Same min-width: 0 trick at the flex level so the heartbeat-bar
+       child can be narrower than its content. */
+    min-width: 0 !important;
+  }
+
+  .shadow-box.monitor-list > .monitor-list > .item > .row > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .shadow-box.monitor-list > .monitor-list > .item > .row > div:last-child {
+    margin-top: 8px !important;
+  }
+}
+
+/* Light mode grid borders (desktop only) */
+@media (min-width: 992px) and (prefers-color-scheme: light) {
+  .shadow-box.monitor-list > .monitor-list > .item {
+    border-bottom-color: #d0d7de !important;
+    border-right-color: #d0d7de !important;
+  }
+}
+
+/* Mobile: stack name + heartbeat bar vertically for full-width bars */
+@media (max-width: 991px) {
+  .shadow-box.monitor-list > .monitor-list > .item {
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .shadow-box.monitor-list > .monitor-list > .item > .row {
+    flex-direction: column !important;
+    min-width: 0 !important;
+  }
+
+  .shadow-box.monitor-list > .monitor-list > .item > .row > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .shadow-box.monitor-list > .monitor-list > .item > .row > div:last-child {
+    margin-top: 6px !important;
+  }
+}
+
 /* ===== UPTIME KUMA SPECIFIC OVERRIDES ===== */
-
-/* Overall status banner icon/checkmark */
-@media (prefers-color-scheme: dark) {
-  .overall-status svg,
-  .overall-status i,
-  .overall-status .icon,
-  .overall-status path,
-  .overall-status .fa,
-  .overall-status .fas,
-  .overall-status .far,
-  .overall-status .bi,
-  .overall-status span.icon,
-  .bg-success svg,
-  .bg-success i,
-  .bg-success path,
-  .alert-success svg,
-  .alert-success i {
-    color: #02040a !important;
-    fill: #02040a !important;
-    stroke: #02040a !important;
-  }
-}
-
-@media (prefers-color-scheme: light) {
-  .overall-status svg,
-  .overall-status i,
-  .overall-status .icon,
-  .overall-status path,
-  .overall-status .fa,
-  .overall-status .fas,
-  .overall-status .far,
-  .overall-status .bi,
-  .overall-status span.icon,
-  .bg-success svg,
-  .bg-success i,
-  .bg-success path,
-  .alert-success svg,
-  .alert-success i {
-    color: #ffffff !important;
-    fill: #ffffff !important;
-    stroke: #ffffff !important;
-  }
-}
 
 /* Status indicator dots */
 .status-indicator.up,
