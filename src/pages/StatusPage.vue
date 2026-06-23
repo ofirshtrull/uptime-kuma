@@ -804,17 +804,37 @@ export default {
 
             let status = STATUS_PAGE_ALL_UP;
             let hasUp = false;
+            let hasArnicaMonitor = false;
 
-            for (let id in this.$root.publicLastHeartbeatList) {
-                let beat = this.$root.publicLastHeartbeatList[id];
-
-                if (beat.status === MAINTENANCE) {
-                    return STATUS_PAGE_MAINTENANCE;
-                } else if (beat.status === UP) {
-                    hasUp = true;
-                } else {
-                    status = STATUS_PAGE_PARTIAL_DOWN;
+            // The overall banner should reflect only Arnica-operated services.
+            // External / 3rd-party groups (e.g. Jira, GitHub) must not flip the
+            // banner to "Degraded", so we skip them here.
+            for (const group of this.$root.publicGroupList) {
+                if (this.isExternalGroup(group)) {
+                    continue;
                 }
+
+                for (const monitor of group.monitorList) {
+                    const beat = this.$root.publicLastHeartbeatList[monitor.id];
+                    if (!beat) {
+                        continue;
+                    }
+
+                    hasArnicaMonitor = true;
+
+                    if (beat.status === MAINTENANCE) {
+                        return STATUS_PAGE_MAINTENANCE;
+                    } else if (beat.status === UP) {
+                        hasUp = true;
+                    } else {
+                        status = STATUS_PAGE_PARTIAL_DOWN;
+                    }
+                }
+            }
+
+            // No Arnica monitors are being tracked -> nothing to report on.
+            if (!hasArnicaMonitor) {
+                return -1;
             }
 
             if (!hasUp) {
@@ -1048,6 +1068,34 @@ export default {
         }
     },
     methods: {
+        /**
+         * Determine whether a status page group represents external / 3rd-party
+         * services that should be excluded from the overall status banner.
+         * A group is treated as external if its name matches /external|3rd.?party/i
+         * or if every monitor in it carries an "external"/"3rd-party" tag.
+         * @param {object} group Public group object ({ name, monitorList })
+         * @returns {boolean} True if the group is external
+         */
+        isExternalGroup(group) {
+            if (!group) {
+                return false;
+            }
+
+            const externalNamePattern = /external|3rd.?party|third.?party/i;
+            if (group.name && externalNamePattern.test(group.name)) {
+                return true;
+            }
+
+            const monitorList = group.monitorList || [];
+            if (monitorList.length === 0) {
+                return false;
+            }
+
+            return monitorList.every((monitor) =>
+                (monitor.tags || []).some((tag) => externalNamePattern.test(tag.name))
+            );
+        },
+
         /**
          * Get status page data
          * It should be preloaded in window.preloadData
