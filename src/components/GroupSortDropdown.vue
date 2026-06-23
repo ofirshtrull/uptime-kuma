@@ -160,23 +160,32 @@ export default {
         },
     },
     watch: {
-        // Watch for changes in heartbeat list, reapply sorting
+        // Reapply sort on heartbeat changes ONLY if the user has explicitly
+        // chosen a sortKey. Otherwise we'd clobber the DB-persisted
+        // monitor_group.weight order set by manual drag-and-drop.
         "$root.heartbeatList": {
             handler() {
-                this.applySort();
+                if (this.group && this.group.sortKey) {
+                    this.applySort();
+                }
             },
             deep: true,
         },
 
-        // Watch for changes in uptime list, reapply sorting
         "$root.uptimeList": {
             handler() {
-                this.applySort();
+                if (this.group && this.group.sortKey) {
+                    this.applySort();
+                }
             },
             deep: true,
         },
 
-        // Watch for URL changes and apply sort settings
+        // Apply sort only when explicitly requested via URL. Without a URL
+        // sort param we leave the group untouched so the manual drag order
+        // saved as monitor_group.weight is preserved on refresh.
+        // (sortKey/sortDirection are not persisted to the DB in this fork,
+        // so defaulting them here would always override the saved weights.)
         sortSettingsFromURL: {
             handler(newSortSettings) {
                 if (this.group) {
@@ -188,17 +197,8 @@ export default {
                             sortKey: urlSetting.sortKey,
                             sortDirection: urlSetting.direction,
                         });
-                    } else {
-                        // Set defaults if not in URL
-                        if (this.group.sortKey === undefined) {
-                            this.updateGroup({ sortKey: "status" });
-                        }
-                        if (this.group.sortDirection === undefined) {
-                            this.updateGroup({ sortDirection: "asc" });
-                        }
+                        this.applySort();
                     }
-
-                    this.applySort();
                 }
             },
             immediate: true,
