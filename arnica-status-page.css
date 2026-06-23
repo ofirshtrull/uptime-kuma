@@ -245,8 +245,7 @@
   .shadow-box.incident,
   .incident-list .shadow-box {
     background-color: #161a1e !important;
-    border: 1px solid #2f3139 !important;
-    border-left: 3px solid #40bca3 !important;
+    border: 1px solid rgba(64, 188, 163, 0.28) !important;
   }
 
   /* Incident title */
@@ -535,8 +534,7 @@
   .shadow-box.incident,
   .incident-list .shadow-box {
     background-color: #ffffff !important;
-    border: 1px solid #d0d7de !important;
-    border-left: 3px solid #40bca3 !important;
+    border: 1px solid rgba(64, 188, 163, 0.28) !important;
   }
 
   .incident-title,
@@ -1028,18 +1026,18 @@ h1, h2, h3, h4, h5, h6,
   font-size: 12px !important;
 }
 
-/* Primary button as Arnica green gradient */
+/* Primary button as Arnica green gradient CTA (matches arniops .btn) */
 .btn-primary,
 .btn.btn-primary {
-  background: linear-gradient(135deg, #5cc9b3, #27a88e) !important;
+  background: linear-gradient(135deg, #64c6b1, #27a88e) !important;
   border: none !important;
-  color: #0e2025 !important;
+  color: #15282d !important;
 }
 
 .btn-primary:hover,
 .btn.btn-primary:hover {
-  background: linear-gradient(135deg, #64c6b1, #179078) !important;
-  color: #0e2025 !important;
+  background: linear-gradient(135deg, #95d9cb, #27a88e) !important;
+  color: #15282d !important;
 }
 
 /* Overall status banner text in Poppins */
@@ -1049,15 +1047,15 @@ h1, h2, h3, h4, h5, h6,
   border-radius: 6px !important;
 }
 
-/* ===== ARNICA NAVY SURFACES (dark mode) =====
-   Shift the near-black surfaces to Arnica brand navy
-   (#0E2025 page / #15282D panels) for a cohesive look. */
+/* ===== ARNICA SURFACES (dark mode) =====
+   Match arniops: navy surface ramp with GREEN-TINTED borders
+   (not gray), Arnica radius, and a soft depth shadow. */
 @media (prefers-color-scheme: dark) {
   body,
   .container,
   #app,
   html {
-    background-color: #0e2025 !important;
+    background-color: var(--ak-bg) !important;
   }
 
   .shadow-box,
@@ -1065,19 +1063,26 @@ h1, h2, h3, h4, h5, h6,
   .monitor-list,
   .list-group-item,
   .bg-secondary {
-    background-color: #15282d !important;
-    border-color: #21383f !important;
+    background-color: var(--ak-surface) !important;
+    border: 1px solid var(--ak-border) !important;
+    border-radius: var(--ak-radius) !important;
+    box-shadow: none !important;
   }
 
   .bg-dark,
   .navbar,
   .header {
-    background-color: #102228 !important;
+    background-color: var(--ak-bg-soft) !important;
   }
 
   .item,
   .monitor-list-item {
-    border-color: #21383f !important;
+    border-color: var(--ak-border) !important;
+  }
+
+  /* Row hover uses the Arnica raised-surface tint */
+  .shadow-box.monitor-list > .monitor-list > .item:hover {
+    background-color: var(--ak-surface-hover) !important;
   }
 
   .incident-card,
@@ -1085,17 +1090,17 @@ h1, h2, h3, h4, h5, h6,
   .pin-section,
   .shadow-box.incident,
   .incident-list .shadow-box {
-    background-color: #15282d !important;
-    border-color: #21383f !important;
-    border-left-color: #40bca3 !important;
+    background-color: var(--ak-surface) !important;
+    border: 1px solid var(--ak-border) !important;
+    border-radius: var(--ak-radius) !important;
   }
 }
 
-/* Navy grid borders (desktop dark) */
+/* Green-tinted grid dividers (desktop dark) */
 @media (min-width: 992px) and (prefers-color-scheme: dark) {
   .shadow-box.monitor-list > .monitor-list > .item {
-    border-bottom-color: #21383f !important;
-    border-right-color: #21383f !important;
+    border-bottom-color: var(--ak-border) !important;
+    border-right-color: var(--ak-border) !important;
   }
 }
 
@@ -1120,11 +1125,11 @@ h1, h2, h3, h4, h5, h6,
   vertical-align: middle !important;
 }
 
-/* Operational - Arnica green */
+/* Operational - Arnica green (arniops .pill--approved) */
 .group-status--up {
   background-color: rgba(64, 188, 163, 0.12) !important;
-  color: #5cc9b3 !important;
-  border: 1px solid rgba(64, 188, 163, 0.30) !important;
+  color: #95d9cb !important;
+  border: 1px solid rgba(64, 188, 163, 0.28) !important;
 }
 
 /* Partially Degraded - Arnica tulip/amber */
@@ -1182,4 +1187,148 @@ h1, h2, h3, h4, h5, h6,
 
 .external-status-note svg {
   flex: 0 0 auto !important;
+}
+
+/* =====================================================
+   POLISH LAYER
+   Tokens + consistent interaction states, motion, focus,
+   and elevation. Restrained, state-conveying only.
+===================================================== */
+:root {
+  /* Arnica design system tokens (mirrors arniops/public/styles.css) */
+  --green-300: #95d9cb;
+  --green-400: #64c6b1;
+  --green-500: #40bca3;
+  --green-600: #27a88e;
+  --green-700: #179078;
+  --tulip-500: #ebb838;
+  --coral: #e16a5c;
+  --ak-bg: #0e2025;
+  --ak-bg-soft: #13282e;
+  --ak-surface: #15282d;
+  --ak-surface-raised: #1a323a;
+  --ak-surface-hover: #1f3a42;
+  --ak-border: rgba(64, 188, 163, 0.14);
+  --ak-border-strong: rgba(64, 188, 163, 0.28);
+  --ak-text: #e9f2ef;
+  --ak-text-dim: #9fb2ae;
+  --ak-text-faint: #6e827e;
+  --ak-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+  --ak-radius: 12px;
+  --ak-radius-sm: 8px;
+
+  /* aliases used by the polish layer */
+  --arnica-green: #40bca3;
+  --arnica-green-light: #5cc9b3;
+  --arnica-orange: #ebb838;
+  --arnica-radius: 10px;
+  --arnica-ease: cubic-bezier(0.22, 1, 0.36, 1); /* ease-out-quint */
+  --arnica-dur: 200ms;
+}
+
+/* State-conveying transitions (no decorative motion) */
+a,
+.btn,
+.btn-primary,
+.btn-outline-primary,
+.support-email-btn,
+.rss-btn,
+.badge,
+.item,
+.monitor-list-item,
+.group-status,
+.overall-status,
+.external-status-note,
+.incident-card,
+.shadow-box {
+  transition:
+    background-color var(--arnica-dur) var(--arnica-ease),
+    border-color var(--arnica-dur) var(--arnica-ease),
+    color var(--arnica-dur) var(--arnica-ease),
+    box-shadow var(--arnica-dur) var(--arnica-ease),
+    transform var(--arnica-dur) var(--arnica-ease) !important;
+}
+
+/* Consistent radius + accessible keyboard focus on all controls */
+.btn-primary,
+.btn.btn-primary,
+.btn-outline-primary,
+.support-email-btn,
+.rss-btn {
+  border-radius: var(--arnica-radius) !important;
+}
+
+a:focus-visible,
+.btn:focus-visible,
+.btn-primary:focus-visible,
+.btn-outline-primary:focus-visible,
+.support-email-btn:focus-visible,
+.rss-btn:focus-visible {
+  outline: 2px solid var(--arnica-green-light) !important;
+  outline-offset: 2px !important;
+  border-radius: var(--arnica-radius) !important;
+}
+
+/* Active feedback for buttons */
+.support-email-btn:active,
+.rss-btn:active,
+.btn-primary:active {
+  transform: translateY(0) !important;
+}
+
+/* Overall status banner: card radius + subtle elevation */
+.overall-status {
+  border-radius: var(--ak-radius) !important;
+  box-shadow: 0 10px 30px -16px rgba(0, 0, 0, 0.55) !important;
+}
+
+/* Incident cards: replace banned left side-stripe with a uniform
+   green-tinted border (keeps the panel surface from earlier rules). */
+.incident-card,
+.incident,
+.pin-section,
+.shadow-box.incident,
+.incident-list .shadow-box {
+  border: 1px solid rgba(64, 188, 163, 0.30) !important;
+}
+
+/* Subtle row-hover to convey interactivity (dark) */
+@media (prefers-color-scheme: dark) {
+  .shadow-box.monitor-list > .monitor-list > .item:hover {
+    background-color: rgba(64, 188, 163, 0.05) !important;
+  }
+}
+
+/* Subtle row-hover (light) */
+@media (prefers-color-scheme: light) {
+  .shadow-box.monitor-list > .monitor-list > .item:hover {
+    background-color: rgba(64, 188, 163, 0.06) !important;
+  }
+}
+
+/* Match Arnica card radius in light mode too */
+@media (prefers-color-scheme: light) {
+  .shadow-box,
+  .card,
+  .monitor-list,
+  .list-group-item,
+  .incident-card,
+  .incident,
+  .pin-section,
+  .shadow-box.incident,
+  .incident-list .shadow-box {
+    border-radius: var(--ak-radius) !important;
+  }
+}
+
+/* Respect reduced-motion: drop all transitions/animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }
