@@ -1156,3 +1156,30 @@ h1, h2, h3, h4, h5, h6,
 .group--external {
   --beat-down-color: #ebb838;
 }
+
+/* =====================================================
+   EXTERNAL SERVICES NOTE
+   Small secondary banner shown under the main status when a
+   3rd-party service is down. Arnica orange, intentionally
+   lower-weight than the overall banner.
+===================================================== */
+.external-status-note {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 10px 16px !important;
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  text-align: center !important;
+  border-radius: 6px !important;
+  background-color: rgba(235, 184, 56, 0.12) !important;
+  color: #ebb838 !important;
+  border: 1px solid rgba(235, 184, 56, 0.35) !important;
+}
+
+.external-status-note svg {
+  flex: 0 0 auto !important;
+}

@@ -418,6 +418,12 @@
                 </template>
             </div>
 
+            <!-- External / 3rd-party services note (does not affect overall status) -->
+            <div v-if="externalServicesAffected" class="shadow-box external-status-note mb-4">
+                <font-awesome-icon icon="exclamation-triangle" class="me-2" />
+                Some third-party external services are partially down and might affect Arnica scans for some users.
+            </div>
+
             <!-- Maintenance -->
             <template v-if="maintenanceList.length > 0">
                 <div
@@ -858,6 +864,21 @@ export default {
 
         isMaintenance() {
             return this.overallStatus === STATUS_PAGE_MAINTENANCE;
+        },
+
+        externalServicesAffected() {
+            for (const group of this.$root.publicGroupList) {
+                if (!this.isExternalGroup(group)) {
+                    continue;
+                }
+                for (const monitor of group.monitorList) {
+                    const beat = this.$root.publicLastHeartbeatList[monitor.id];
+                    if (beat && beat.status !== UP && beat.status !== MAINTENANCE) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         },
 
         incidentHTML() {
