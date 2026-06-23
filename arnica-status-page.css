@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap");
+
 /* =====================================================
    ARNICA STATUS PAGE - CUSTOM CSS
    For Uptime Kuma Status Page
@@ -637,9 +639,7 @@
   align-items: center !important;
   gap: 12px !important;
   flex-wrap: wrap !important;
-  margin-bottom: 15px !important;
-  position: relative !important;
-  top: -30px !important;
+  margin: 24px 0 16px !important;
 }
 
 /* ===== CONTACT SUPPORT BUTTON ===== */
@@ -942,4 +942,217 @@
 ::selection {
   background-color: #40bca3;
   color: #02040a;
+}
+
+/* =====================================================
+   ARNICA BRAND TYPOGRAPHY & COMPONENTS
+   Brand system: Poppins (headings/body) + Azeret Mono
+   (eyebrows, labels, buttons). Greens + navy only.
+   Tokens: green-400 #64C6B1, green-500 #40BCA3,
+   green-600 #27A88E, dark-900 #15282D, darkest #0E2025.
+===================================================== */
+
+/* Base font: Poppins for body + general text */
+body,
+.container,
+#app,
+html,
+p,
+span,
+div,
+a,
+label,
+li,
+td,
+th,
+input,
+select,
+textarea {
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+h1, h2, h3, h4, h5, h6,
+.status-page-title,
+.page-title,
+.title {
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* Group titles styled as Arnica "eyebrow":
+   uppercase Azeret Mono with a leading green dash. */
+.group-title .title-section {
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.group-title .title-section::before {
+  content: "" !important;
+  display: inline-block !important;
+  width: 18px !important;
+  height: 2px !important;
+  margin-right: 10px !important;
+  background-color: #40bca3 !important;
+  flex: 0 0 auto !important;
+}
+
+.group-title .title-section span[data-testid="group-name"],
+.group-name,
+.monitor-group-name,
+.group-header {
+  font-family: "Azeret Mono", ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #5cc9b3 !important;
+}
+
+/* Status / uptime pills as mono labels */
+.badge,
+.badge.rounded-pill {
+  font-family: "Azeret Mono", ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* Buttons: uppercase Azeret Mono CTAs */
+.btn-primary,
+.btn.btn-primary,
+.btn-outline-primary,
+.support-email-btn,
+.rss-btn {
+  font-family: "Azeret Mono", ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.14em !important;
+  font-size: 12px !important;
+}
+
+/* Primary button as Arnica green gradient */
+.btn-primary,
+.btn.btn-primary {
+  background: linear-gradient(135deg, #5cc9b3, #27a88e) !important;
+  border: none !important;
+  color: #0e2025 !important;
+}
+
+.btn-primary:hover,
+.btn.btn-primary:hover {
+  background: linear-gradient(135deg, #64c6b1, #179078) !important;
+  color: #0e2025 !important;
+}
+
+/* Overall status banner text in Poppins */
+.overall-status {
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, sans-serif !important;
+  letter-spacing: -0.01em !important;
+  border-radius: 6px !important;
+}
+
+/* ===== ARNICA NAVY SURFACES (dark mode) =====
+   Shift the near-black surfaces to Arnica brand navy
+   (#0E2025 page / #15282D panels) for a cohesive look. */
+@media (prefers-color-scheme: dark) {
+  body,
+  .container,
+  #app,
+  html {
+    background-color: #0e2025 !important;
+  }
+
+  .shadow-box,
+  .card,
+  .monitor-list,
+  .list-group-item,
+  .bg-secondary {
+    background-color: #15282d !important;
+    border-color: #21383f !important;
+  }
+
+  .bg-dark,
+  .navbar,
+  .header {
+    background-color: #102228 !important;
+  }
+
+  .item,
+  .monitor-list-item {
+    border-color: #21383f !important;
+  }
+
+  .incident-card,
+  .incident,
+  .pin-section,
+  .shadow-box.incident,
+  .incident-list .shadow-box {
+    background-color: #15282d !important;
+    border-color: #21383f !important;
+    border-left-color: #40bca3 !important;
+  }
+}
+
+/* Navy grid borders (desktop dark) */
+@media (min-width: 992px) and (prefers-color-scheme: dark) {
+  .shadow-box.monitor-list > .monitor-list > .item {
+    border-bottom-color: #21383f !important;
+    border-right-color: #21383f !important;
+  }
+}
+
+/* =====================================================
+   PER-GROUP STATUS PILL
+   Rendered by PublicGroupList.vue next to each group title.
+   Arnica services use green/amber/red; external (3rd-party)
+   groups are forced to Arnica orange and never read as a
+   full outage.
+===================================================== */
+.group-status {
+  font-family: "Azeret Mono", ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  padding: 4px 10px !important;
+  border-radius: 999px !important;
+  margin-left: 12px !important;
+  white-space: nowrap !important;
+  vertical-align: middle !important;
+}
+
+/* Operational - Arnica green */
+.group-status--up {
+  background-color: rgba(64, 188, 163, 0.12) !important;
+  color: #5cc9b3 !important;
+  border: 1px solid rgba(64, 188, 163, 0.30) !important;
+}
+
+/* Partially Degraded - Arnica tulip/amber */
+.group-status--partial,
+.group-status--maintenance {
+  background-color: rgba(235, 184, 56, 0.14) !important;
+  color: #ebb838 !important;
+  border: 1px solid rgba(235, 184, 56, 0.35) !important;
+}
+
+/* Major Outage - Arnica coral */
+.group-status--down {
+  background-color: rgba(225, 106, 92, 0.16) !important;
+  color: #e16a5c !important;
+  border: 1px solid rgba(225, 106, 92, 0.40) !important;
+}
+
+/* External / 3rd-party groups: always Arnica orange, never red.
+   Keeps us from signalling a "full outage" for services we don't run. */
+.group--external .group-status--partial,
+.group--external .group-status--down {
+  background-color: rgba(235, 184, 56, 0.14) !important;
+  color: #ebb838 !important;
+  border: 1px solid rgba(235, 184, 56, 0.40) !important;
+}
+
+/* External groups: render DOWN heartbeats in Arnica orange instead of red.
+   Consumed by HeartbeatBar.vue's canvas via getComputedStyle. */
+.group--external {
+  --beat-down-color: #ebb838;
 }

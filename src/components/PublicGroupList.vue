@@ -2,7 +2,7 @@
     <!-- Group List -->
     <Draggable v-model="$root.publicGroupList" :disabled="!editMode" item-key="id" :animation="100">
         <template #item="group">
-            <div class="mb-5" data-testid="group">
+            <div class="mb-5" :class="{ 'group--external': isExternalGroup(group.element) }" data-testid="group">
                 <!-- Group Title -->
                 <h2 class="group-title">
                     <div class="title-section">
@@ -23,6 +23,14 @@
                             tag="span"
                             data-testid="group-name"
                         />
+                        <span
+                            v-if="groupStatusKey(group.element) !== 'unknown'"
+                            class="group-status"
+                            :class="`group-status--${groupStatusKey(group.element)}`"
+                            data-testid="group-status"
+                        >
+                            {{ groupStatusLabel(group.element) }}
+                        </span>
                     </div>
 
                     <GroupSortDropdown
@@ -138,6 +146,9 @@ import Uptime from "./Uptime.vue";
 import Tag from "./Tag.vue";
 import Status from "./Status.vue";
 import GroupSortDropdown from "./GroupSortDropdown.vue";
+import { UP, DOWN, MAINTENANCE } from "../util.ts";
+
+const EXTERNAL_GROUP_PATTERN = /external|3rd.?party|third.?party/i;
 
 export default {
     components: {
@@ -248,6 +259,87 @@ export default {
             let heartbeats = this.$root.heartbeatList[monitorId] ?? [];
             let lastHeartbeat = heartbeats[heartbeats.length - 1];
             return lastHeartbeat?.status;
+        },
+
+        /**
+         * Determine whether a group represents external / 3rd-party services.
+         * A group is external if its name matches the external pattern or every
+         * monitor in it carries an "external"/"3rd-party" tag.
+         * @param {object} group Group object ({ name, monitorList })
+         * @returns {boolean} True if the group is external
+         */
+        isExternalGroup(group) {
+            if (!group) {
+                return false;
+            }
+            if (group.name && EXTERNAL_GROUP_PATTERN.test(group.name)) {
+                return true;
+            }
+            const monitorList = group.monitorList || [];
+            if (monitorList.length === 0) {
+                return false;
+            }
+            return monitorList.every((monitor) =>
+                (monitor.tags || []).some((tag) => EXTERNAL_GROUP_PATTERN.test(tag.name))
+            );
+        },
+
+        /**
+         * Compute a rollup status key for a group from its monitors' last beats.
+         * Distinguishes "partial" (some down) from "down" (all down) so we never
+         * signal a full outage when the service is only partially degraded.
+         * @param {object} group Group object ({ monitorList })
+         * @returns {string} One of "up" | "partial" | "down" | "maintenance" | "unknown"
+         */
+        groupStatusKey(group) {
+            const monitorList = group?.monitorList || [];
+            let hasUp = false;
+            let hasDown = false;
+            let hasMaintenance = false;
+            let count = 0;
+
+            for (const monitor of monitorList) {
+                const status = this.statusOfLastHeartbeat(monitor.id);
+                if (status === undefined || status === null) {
+                    continue;
+                }
+                count++;
+                if (status === MAINTENANCE) {
+                    hasMaintenance = true;
+                } else if (status === UP) {
+                    hasUp = true;
+                } else if (status === DOWN) {
+                    hasDown = true;
+                }
+            }
+
+            if (count === 0) {
+                return "unknown";
+            }
+            if (hasMaintenance) {
+                return "maintenance";
+            }
+            if (!hasDown) {
+                return "up";
+            }
+            if (hasUp) {
+                return "partial";
+            }
+            return "down";
+        },
+
+        /**
+         * Human-readable label for a group's rollup status. External groups use
+         * softer wording ("Degraded") and never read as a full outage.
+         * @param {object} group Group object
+         * @returns {string} Status label
+         */
+        groupStatusLabel(group) {
+            const key = this.groupStatusKey(group);
+            const labels = this.isExternalGroup(group)
+                ? { up: "Operational", partial: "Degraded", down: "Degraded", maintenance: "Maintenance", unknown: "" }
+                : { up: "Operational", partial: "Partially Degraded", down: "Major Outage", maintenance: "Maintenance", unknown: "" };
+            return labels[key];
         },
 
         /**
