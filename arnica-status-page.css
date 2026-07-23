@@ -238,50 +238,94 @@
 
   /* ===== INCIDENT CARDS ===== */
 
-  /* Pinned incident / incident card */
+  /* Neutral / past-incident cards (no severity class).
+     Styled incidents (.bg-danger etc.) must keep Arnica status colors —
+     do NOT override those backgrounds here. */
   .incident-card,
-  .incident,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success):not(.bg-light):not(.bg-dark),
   .pin-section,
-  .shadow-box.incident,
+  .shadow-box.incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success):not(.bg-light):not(.bg-dark),
   .incident-list .shadow-box {
     background-color: #161a1e !important;
     border: 1px solid rgba(64, 188, 163, 0.28) !important;
   }
 
+  /* Severity-styled pinned incidents — Arnica brand status colors */
+  .incident.bg-danger,
+  .shadow-box.incident.bg-danger {
+    background-color: #e62e26 !important;
+    border: none !important;
+    color: #ffffff !important;
+  }
+
+  .incident.bg-warning,
+  .shadow-box.incident.bg-warning {
+    background-color: #d79c21 !important;
+    border: none !important;
+    color: #02040a !important;
+  }
+
+  .incident.bg-info,
+  .shadow-box.incident.bg-info,
+  .incident.bg-primary,
+  .shadow-box.incident.bg-primary,
+  .incident.bg-success,
+  .shadow-box.incident.bg-success {
+    background-color: #40bca3 !important;
+    border: none !important;
+    color: #02040a !important;
+  }
+
+  .incident.bg-danger :is(h3, h4, .content, p, span, small, .date),
+  .shadow-box.incident.bg-danger :is(h3, h4, .content, p, span, small, .date) {
+    color: #ffffff !important;
+  }
+
+  .incident.bg-warning :is(h3, h4, .content, p, span, small, .date),
+  .shadow-box.incident.bg-warning :is(h3, h4, .content, p, span, small, .date),
+  .incident.bg-info :is(h3, h4, .content, p, span, small, .date),
+  .shadow-box.incident.bg-info :is(h3, h4, .content, p, span, small, .date),
+  .incident.bg-primary :is(h3, h4, .content, p, span, small, .date),
+  .shadow-box.incident.bg-primary :is(h3, h4, .content, p, span, small, .date),
+  .incident.bg-success :is(h3, h4, .content, p, span, small, .date),
+  .shadow-box.incident.bg-success :is(h3, h4, .content, p, span, small, .date) {
+    color: inherit !important;
+  }
+
   /* Incident title */
   .incident-title,
-  .incident h3,
-  .incident h4,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) h3,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) h4,
   .incident-card h3,
   .incident-card h4,
   .pin-section h4,
-  .shadow-box h4 {
+  .shadow-box:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) h4 {
     color: #e6edf3 !important;
   }
 
   /* Incident content */
   .incident-content,
-  .incident p,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) p,
   .incident-card p,
-  .incident span,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) span,
   .incident-card span,
-  .incident .content,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) .content,
   .incident-card .content,
   .pin-section p,
   .pin-section span,
-  .shadow-box p,
-  .shadow-box span {
+  .shadow-box:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) p,
+  .shadow-box:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) span {
     color: #bcbec0 !important;
   }
 
   /* Incident dates */
   .incident-date,
-  .incident .date,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) .date,
   .incident-card .date,
-  .incident small,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) small,
   .incident-card small,
   .pin-section small,
-  .shadow-box small,
+  .shadow-box:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) small,
   .date-created {
     color: #747678 !important;
   }
@@ -528,46 +572,88 @@
 
   /* ===== INCIDENT CARDS ===== */
 
+  /* Neutral / past-incident cards only — keep severity colors on bg-* */
   .incident-card,
-  .incident,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success):not(.bg-light):not(.bg-dark),
   .pin-section,
-  .shadow-box.incident,
+  .shadow-box.incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success):not(.bg-light):not(.bg-dark),
   .incident-list .shadow-box {
     background-color: #ffffff !important;
     border: 1px solid rgba(64, 188, 163, 0.28) !important;
   }
 
+  .incident.bg-danger,
+  .shadow-box.incident.bg-danger {
+    background-color: #d0104a !important;
+    border: none !important;
+    color: #ffffff !important;
+  }
+
+  .incident.bg-warning,
+  .shadow-box.incident.bg-warning {
+    background-color: #daae00 !important;
+    border: none !important;
+    color: #0d1116 !important;
+  }
+
+  .incident.bg-info,
+  .shadow-box.incident.bg-info,
+  .incident.bg-primary,
+  .shadow-box.incident.bg-primary,
+  .incident.bg-success,
+  .shadow-box.incident.bg-success {
+    background-color: #40bca3 !important;
+    border: none !important;
+    color: #ffffff !important;
+  }
+
+  .incident.bg-danger :is(h3, h4, .content, p, span, small, .date),
+  .shadow-box.incident.bg-danger :is(h3, h4, .content, p, span, small, .date) {
+    color: #ffffff !important;
+  }
+
+  .incident.bg-warning :is(h3, h4, .content, p, span, small, .date),
+  .shadow-box.incident.bg-warning :is(h3, h4, .content, p, span, small, .date),
+  .incident.bg-info :is(h3, h4, .content, p, span, small, .date),
+  .shadow-box.incident.bg-info :is(h3, h4, .content, p, span, small, .date),
+  .incident.bg-primary :is(h3, h4, .content, p, span, small, .date),
+  .shadow-box.incident.bg-primary :is(h3, h4, .content, p, span, small, .date),
+  .incident.bg-success :is(h3, h4, .content, p, span, small, .date),
+  .shadow-box.incident.bg-success :is(h3, h4, .content, p, span, small, .date) {
+    color: inherit !important;
+  }
+
   .incident-title,
-  .incident h3,
-  .incident h4,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) h3,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) h4,
   .incident-card h3,
   .incident-card h4,
   .pin-section h4,
-  .shadow-box h4 {
+  .shadow-box:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) h4 {
     color: #0d1116 !important;
   }
 
   .incident-content,
-  .incident p,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) p,
   .incident-card p,
-  .incident span,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) span,
   .incident-card span,
-  .incident .content,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) .content,
   .incident-card .content,
   .pin-section p,
   .pin-section span,
-  .shadow-box p,
-  .shadow-box span {
+  .shadow-box:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) p,
+  .shadow-box:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) span {
     color: #606468 !important;
   }
 
   .incident-date,
-  .incident .date,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) .date,
   .incident-card .date,
-  .incident small,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) small,
   .incident-card small,
   .pin-section small,
-  .shadow-box small,
+  .shadow-box:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success) small,
   .date-created {
     color: #9ea0a2 !important;
   }
@@ -1086,9 +1172,9 @@ h1, h2, h3, h4, h5, h6,
   }
 
   .incident-card,
-  .incident,
+  .incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success):not(.bg-light):not(.bg-dark),
   .pin-section,
-  .shadow-box.incident,
+  .shadow-box.incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success):not(.bg-light):not(.bg-dark),
   .incident-list .shadow-box {
     background-color: var(--ak-surface) !important;
     border: 1px solid var(--ak-border) !important;
@@ -1282,12 +1368,12 @@ a:focus-visible,
   box-shadow: 0 10px 30px -16px rgba(0, 0, 0, 0.55) !important;
 }
 
-/* Incident cards: replace banned left side-stripe with a uniform
-   green-tinted border (keeps the panel surface from earlier rules). */
+/* Incident cards: green-tinted border for neutral cards only.
+   Severity-styled incidents keep a solid brand fill (no green border). */
 .incident-card,
-.incident,
+.incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success):not(.bg-light):not(.bg-dark),
 .pin-section,
-.shadow-box.incident,
+.shadow-box.incident:not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-primary):not(.bg-success):not(.bg-light):not(.bg-dark),
 .incident-list .shadow-box {
   border: 1px solid rgba(64, 188, 163, 0.30) !important;
 }
@@ -1330,5 +1416,70 @@ a:focus-visible,
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* =====================================================
+   INCIDENT → BANNER OVERRIDE (Approach A)
+   When a styled pinned incident is present but the banner
+   still shows .ok (heartbeat-only "All Systems Operational"),
+   restyle it from the incident. After StatusPage.vue ships
+   the style-based overallStatus() override, the banner uses
+   .danger/.warning itself and these :has(.ok) rules no-op.
+===================================================== */
+@media (prefers-color-scheme: dark) {
+  body:has(.incident.bg-danger) .overall-status:has(.ok) {
+    background-color: #e62e26 !important;
+    color: #ffffff !important;
+    border: none !important;
+  }
+
+  body:has(.incident.bg-warning) .overall-status:has(.ok) {
+    background-color: #d79c21 !important;
+    color: #02040a !important;
+    border: none !important;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  body:has(.incident.bg-danger) .overall-status:has(.ok) {
+    background-color: #d0104a !important;
+    color: #ffffff !important;
+    border: none !important;
+  }
+
+  body:has(.incident.bg-warning) .overall-status:has(.ok) {
+    background-color: #daae00 !important;
+    color: #0d1116 !important;
+    border: none !important;
+  }
+}
+
+body:has(.incident.bg-danger) .overall-status:has(.ok) .ok,
+body:has(.incident.bg-warning) .overall-status:has(.ok) .ok {
+  display: none !important;
+}
+
+body:has(.incident.bg-danger) .overall-status:has(.ok) > div,
+body:has(.incident.bg-warning) .overall-status:has(.ok) > div {
+  font-size: 0 !important;
+}
+
+body:has(.incident.bg-danger) .overall-status:has(.ok) > div::after {
+  content: "Degraded Service";
+  font-size: 25px;
+  font-weight: bold;
+}
+
+body:has(.incident.bg-warning) .overall-status:has(.ok) > div::after {
+  content: "Partially Degraded Service";
+  font-size: 25px;
+  font-weight: bold;
+}
+
+@media (max-width: 550px) {
+  body:has(.incident.bg-danger) .overall-status:has(.ok) > div::after,
+  body:has(.incident.bg-warning) .overall-status:has(.ok) > div::after {
+    font-size: 20px;
   }
 }

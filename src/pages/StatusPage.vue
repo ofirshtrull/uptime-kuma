@@ -847,6 +847,18 @@ export default {
                 status = STATUS_PAGE_ALL_DOWN;
             }
 
+            // Style-based override from active pinned incidents:
+            // danger → Degraded Service; warning → Partially Degraded.
+            // Other styles (info/primary/etc.) leave the heartbeat-derived status.
+            // Take the worse of heartbeat status and incident style.
+            const incidentStyles = new Set(this.activeIncidents.map((i) => i.style));
+            if (incidentStyles.has("danger")) {
+                return STATUS_PAGE_ALL_DOWN;
+            }
+            if (incidentStyles.has("warning") && status === STATUS_PAGE_ALL_UP) {
+                return STATUS_PAGE_PARTIAL_DOWN;
+            }
+
             return status;
         },
 
