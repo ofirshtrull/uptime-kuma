@@ -273,7 +273,16 @@
 
             <!-- Admin functions -->
             <div v-if="hasToken" class="mb-2">
-                <div v-if="!enableEditMode">
+                <button
+                    class="btn btn-primary btn-add-group mb-2 me-2"
+                    data-testid="create-incident-button"
+                    @click="createIncident"
+                >
+                    <font-awesome-icon icon="bullhorn" />
+                    {{ $t("Create Incident") }}
+                </button>
+
+                <template v-if="!enableEditMode">
                     <button class="btn btn-primary mb-2 me-2" data-testid="edit-button" @click="edit">
                         <font-awesome-icon icon="edit" />
                         {{ $t("Edit Status Page") }}
@@ -283,18 +292,7 @@
                         <font-awesome-icon icon="tachometer-alt" />
                         {{ $t("Go to Dashboard") }}
                     </a>
-                </div>
-
-                <div v-else>
-                    <button
-                        class="btn btn-primary btn-add-group me-2"
-                        data-testid="create-incident-button"
-                        @click="createIncident"
-                    >
-                        <font-awesome-icon icon="bullhorn" />
-                        {{ $t("Create Incident") }}
-                    </button>
-                </div>
+                </template>
             </div>
 
             <!-- Incident Edit Form -->
@@ -364,7 +362,7 @@
                         </span>
                     </div>
 
-                    <div v-if="editMode" class="mt-3">
+                    <div v-if="hasToken" class="mt-3">
                         <button class="btn btn-light me-2" @click="resolveIncident(activeIncident)">
                             <font-awesome-icon icon="check" />
                             {{ $t("Resolve") }}
@@ -527,7 +525,7 @@
                         <div class="shadow-box incident-list-box">
                             <IncidentHistory
                                 :incidents="dateGroup"
-                                :edit-mode="enableEditMode"
+                                :edit-mode="hasToken"
                                 :loading="incidentHistoryLoading"
                                 @edit-incident="$refs.incidentManageModal.showEdit($event)"
                                 @delete-incident="$refs.incidentManageModal.showDelete($event)"
@@ -555,7 +553,7 @@
 
             <!-- Incident Manage Modal -->
             <IncidentManageModal
-                v-if="enableEditMode"
+                v-if="hasToken"
                 ref="incidentManageModal"
                 :slug="slug"
                 @incident-updated="loadIncidentHistory"
@@ -646,6 +644,7 @@ import {
     UP,
     MAINTENANCE,
 } from "../util.ts";
+import { isExternalGroup as detectExternalGroup } from "../util-external-group.js";
 import Tag from "../components/Tag.vue";
 import VueMultiselect from "vue-multiselect";
 
@@ -1022,6 +1021,9 @@ export default {
     },
     async created() {
         this.hasToken = "token" in this.$root.storage();
+        if (this.hasToken) {
+            this.$root.initSocketIO(true);
+        }
 
         // Browser change page
         // https://stackoverflow.com/questions/7317273/warn-user-before-leaving-web-page-with-unsaved-changes
@@ -1104,29 +1106,11 @@ export default {
         /**
          * Determine whether a status page group represents external / 3rd-party
          * services that should be excluded from the overall status banner.
-         * A group is treated as external if its name matches /external|3rd.?party/i
-         * or if every monitor in it carries an "external"/"3rd-party" tag.
          * @param {object} group Public group object ({ name, monitorList })
          * @returns {boolean} True if the group is external
          */
         isExternalGroup(group) {
-            if (!group) {
-                return false;
-            }
-
-            const externalNamePattern = /external|3rd.?party|third.?party/i;
-            if (group.name && externalNamePattern.test(group.name)) {
-                return true;
-            }
-
-            const monitorList = group.monitorList || [];
-            if (monitorList.length === 0) {
-                return false;
-            }
-
-            return monitorList.every((monitor) =>
-                (monitor.tags || []).some((tag) => externalNamePattern.test(tag.name))
-            );
+            return detectExternalGroup(group);
         },
 
         /**
@@ -1367,6 +1351,7 @@ export default {
          * @returns {void}
          */
         createIncident() {
+            this.$root.initSocketIO(true);
             this.enableEditIncidentMode = true;
 
             if (this.incident) {
@@ -1576,6 +1561,7 @@ export default {
          * @returns {void}
          */
         resolveIncident(incident) {
+            this.$root.initSocketIO(true);
             this.$root.getSocket().emit("resolveIncident", this.slug, incident.id, (res) => {
                 this.$root.toastRes(res);
                 if (res.ok) {

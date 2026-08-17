@@ -18,11 +18,13 @@
                             @click="removeGroup(group.index)"
                         />
                         <Editable
+                            v-if="editMode"
                             v-model="group.element.name"
-                            :contenteditable="editMode"
+                            :contenteditable="true"
                             tag="span"
                             data-testid="group-name"
                         />
+                        <span v-else data-testid="group-name">{{ displayGroupName(group.element) }}</span>
                         <span
                             v-if="groupStatusKey(group.element) !== 'unknown'"
                             class="group-status"
@@ -40,6 +42,14 @@
                         @update-group="updateGroup"
                     />
                 </h2>
+
+                <p
+                    v-if="isExternalGroup(group.element)"
+                    class="group-description"
+                    data-testid="group-description"
+                >
+                    {{ EXTERNAL_GROUP_DESCRIPTION }}
+                </p>
 
                 <div class="shadow-box monitor-list mt-4 position-relative">
                     <div v-if="group.element.monitorList.length === 0" class="text-center no-monitor-msg">
@@ -82,13 +92,13 @@
                                                 @click="$refs.monitorSettingDialog.show(group, monitor)"
                                             />
                                             <Status
-                                                v-if="showOnlyLastHeartbeat"
+                                                v-if="showOnlyLastHeartbeat && !isExternalGroup(group.element)"
                                                 :status="statusOfLastHeartbeat(monitor.element.id)"
                                             />
                                             <Uptime v-else :monitor="monitor.element" type="24" :pill="true" />
                                             <a
-                                                v-if="showLink(monitor)"
-                                                :href="monitor.element.url"
+                                                v-if="monitorHref(group.element, monitor)"
+                                                :href="monitorHref(group.element, monitor)"
                                                 class="item-name"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
@@ -147,8 +157,12 @@ import Tag from "./Tag.vue";
 import Status from "./Status.vue";
 import GroupSortDropdown from "./GroupSortDropdown.vue";
 import { UP, DOWN, MAINTENANCE } from "../util.ts";
-
-const EXTERNAL_GROUP_PATTERN = /external|3rd.?party|third.?party/i;
+import {
+    EXTERNAL_GROUP_DESCRIPTION,
+    EXTERNAL_GROUP_DISPLAY_NAME,
+    integrationStatusUrl,
+    isExternalGroup as detectExternalGroup,
+} from "../util-external-group.js";
 
 export default {
     components: {
@@ -180,7 +194,9 @@ export default {
         },
     },
     data() {
-        return {};
+        return {
+            EXTERNAL_GROUP_DESCRIPTION,
+        };
     },
     computed: {
         showGroupDrag() {
@@ -263,25 +279,36 @@ export default {
 
         /**
          * Determine whether a group represents external / 3rd-party services.
-         * A group is external if its name matches the external pattern or every
-         * monitor in it carries an "external"/"3rd-party" tag.
          * @param {object} group Group object ({ name, monitorList })
          * @returns {boolean} True if the group is external
          */
         isExternalGroup(group) {
-            if (!group) {
-                return false;
+            return detectExternalGroup(group);
+        },
+
+        /**
+         * Public title for a group. External groups always read as
+         * "Arnica Integrations" so customers don't treat partner outages as ours.
+         * @param {object} group Group object
+         * @returns {string} Display name
+         */
+        displayGroupName(group) {
+            return this.isExternalGroup(group) ? EXTERNAL_GROUP_DISPLAY_NAME : group.name;
+        },
+
+        /**
+         * Clickable href for a monitor. External groups prefer the partner's
+         * official status page over the probe URL.
+         * @param {object} group Group object
+         * @param {object} monitor Draggable monitor slot ({ element })
+         * @returns {string|null} URL or null
+         */
+        monitorHref(group, monitor) {
+            const fallback = this.showLink(monitor) ? monitor.element.url : null;
+            if (this.isExternalGroup(group)) {
+                return integrationStatusUrl(monitor.element.name) || fallback;
             }
-            if (group.name && EXTERNAL_GROUP_PATTERN.test(group.name)) {
-                return true;
-            }
-            const monitorList = group.monitorList || [];
-            if (monitorList.length === 0) {
-                return false;
-            }
-            return monitorList.every((monitor) =>
-                (monitor.tags || []).some((tag) => EXTERNAL_GROUP_PATTERN.test(tag.name))
-            );
+            return fallback;
         },
 
         /**
@@ -452,6 +479,27 @@ export default {
     span {
         display: inline-block;
         min-width: 15px;
+    }
+}
+
+.group-description {
+    margin: 8px 0 0;
+    max-width: 72ch;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #9ea0a2;
+}
+
+/* Partner outages: orange heartbeat + no red "Down" pills. */
+.group--external {
+    --beat-down-color: #ebb838;
+
+    :deep(.badge.bg-danger),
+    :deep(.badge-danger),
+    :deep(.badge.down) {
+        background-color: #ebb838 !important;
+        color: #02040a !important;
     }
 }
 
