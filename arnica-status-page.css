@@ -1036,6 +1036,17 @@
    green-600 #27A88E, dark-900 #15282D, darkest #0E2025.
 ===================================================== */
 
+/* Wider status page layout (Mark feedback: increase div width) */
+.container {
+  max-width: 1400px !important;
+}
+
+@media (min-width: 1600px) {
+  .container {
+    max-width: 1520px !important;
+  }
+}
+
 /* Base font: Poppins for body + general text */
 body,
 .container,
@@ -1258,7 +1269,8 @@ h1, h2, h3, h4, h5, h6,
 
 .group-description {
   margin: 8px 0 0 !important;
-  max-width: 72ch !important;
+  max-width: none !important;
+  width: 100% !important;
   font-family: "Poppins", -apple-system, BlinkMacSystemFont, sans-serif !important;
   font-size: 13px !important;
   font-weight: 400 !important;

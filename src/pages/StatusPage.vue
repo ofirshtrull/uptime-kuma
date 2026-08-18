@@ -642,6 +642,7 @@ import {
     STATUS_PAGE_MAINTENANCE,
     STATUS_PAGE_PARTIAL_DOWN,
     UP,
+    DOWN,
     MAINTENANCE,
 } from "../util.ts";
 import { isExternalGroup as detectExternalGroup } from "../util-external-group.js";
@@ -820,16 +821,36 @@ export default {
                 }
 
                 for (const monitor of group.monitorList) {
-                    const beat = this.$root.publicLastHeartbeatList[monitor.id];
-                    if (!beat) {
+                    // Internal canaries never affect the public banner
+                    if ((monitor.tags || []).some((tag) => /^internal$/i.test(tag.name))) {
+                        continue;
+                    }
+
+                    const beats = this.$root.heartbeatList[monitor.id] ?? [];
+                    const lastBeat = this.$root.publicLastHeartbeatList[monitor.id];
+                    if (!lastBeat) {
                         continue;
                     }
 
                     hasArnicaMonitor = true;
 
-                    if (beat.status === MAINTENANCE) {
+                    // Require 5 successive downs before a canary counts as down
+                    let effectiveStatus = lastBeat.status;
+                    if (Number(effectiveStatus) === DOWN) {
+                        const threshold = 5;
+                        if (beats.length < threshold) {
+                            effectiveStatus = UP;
+                        } else {
+                            const streak = beats.slice(-threshold);
+                            if (!streak.every((b) => Number(b.status) === DOWN)) {
+                                effectiveStatus = UP;
+                            }
+                        }
+                    }
+
+                    if (effectiveStatus === MAINTENANCE) {
                         return STATUS_PAGE_MAINTENANCE;
-                    } else if (beat.status === UP) {
+                    } else if (effectiveStatus === UP) {
                         hasUp = true;
                     } else {
                         status = STATUS_PAGE_PARTIAL_DOWN;

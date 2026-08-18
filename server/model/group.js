@@ -15,7 +15,18 @@ class Group extends BeanModel {
         let monitorList = [];
 
         for (let bean of monitorBeanList) {
-            monitorList.push(await bean.toPublicJSON(showTags, certExpiry));
+            // Internal-tagged monitors are canary/int checks — never expose on
+            // the public status page (only "ext" monitors should appear).
+            const tags = await bean.getTags();
+            if (tags.some((tag) => /^internal$/i.test(tag.name))) {
+                continue;
+            }
+
+            const pub = await bean.toPublicJSON(false, certExpiry);
+            if (showTags) {
+                pub.tags = tags;
+            }
+            monitorList.push(pub);
         }
 
         return {

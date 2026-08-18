@@ -67,7 +67,11 @@
                         item-key="id"
                     >
                         <template #item="monitor">
-                            <div class="item" data-testid="monitor">
+                            <div
+                                v-if="editMode || !isInternalMonitor(monitor.element)"
+                                class="item"
+                                data-testid="monitor"
+                            >
                                 <div class="row">
                                     <div class="col-9 col-xl-6 small-padding">
                                         <div class="info">
@@ -93,7 +97,7 @@
                                             />
                                             <Status
                                                 v-if="showOnlyLastHeartbeat && !isExternalGroup(group.element)"
-                                                :status="statusOfLastHeartbeat(monitor.element.id)"
+                                                :status="statusOfLastHeartbeat(monitor.element.id, true)"
                                             />
                                             <Uptime v-else :monitor="monitor.element" type="24" :pill="true" />
                                             <a
@@ -135,7 +139,11 @@
                                         </div>
                                     </div>
                                     <div :key="$root.userHeartbeatBar" class="col-3 col-xl-6">
-                                        <HeartbeatBar size="mid" :monitor-id="monitor.element.id" />
+                                        <HeartbeatBar
+                                            size="mid"
+                                            :monitor-id="monitor.element.id"
+                                            :down-display-threshold="isExternalGroup(group.element) ? 1 : 5"
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -269,12 +277,35 @@ export default {
         /**
          * Returns the status of the last heartbeat
          * @param {number} monitorId Id of the monitor to get status for
+         * @param {boolean} [smoothCanary=false] When true, require 5 successive
+         * downs before reporting DOWN (Arnica canaries only)
          * @returns {number} Status of the last heartbeat
          */
-        statusOfLastHeartbeat(monitorId) {
+        statusOfLastHeartbeat(monitorId, smoothCanary = false) {
             let heartbeats = this.$root.heartbeatList[monitorId] ?? [];
-            let lastHeartbeat = heartbeats[heartbeats.length - 1];
-            return lastHeartbeat?.status;
+            if (!heartbeats.length) {
+                return undefined;
+            }
+
+            const lastHeartbeat = heartbeats[heartbeats.length - 1];
+            const lastStatus = lastHeartbeat?.status;
+
+            if (!smoothCanary || Number(lastStatus) !== DOWN) {
+                return lastStatus;
+            }
+
+            const threshold = 5;
+            if (heartbeats.length < threshold) {
+                return UP;
+            }
+
+            for (let i = heartbeats.length - threshold; i < heartbeats.length; i++) {
+                if (Number(heartbeats[i]?.status) !== DOWN) {
+                    return UP;
+                }
+            }
+
+            return DOWN;
         },
 
         /**
@@ -284,6 +315,17 @@ export default {
          */
         isExternalGroup(group) {
             return detectExternalGroup(group);
+        },
+
+        /**
+         * Monitors tagged "Internal" are canary/int checks and must not appear
+         * on the public status page (ext monitors only).
+         * @param {object} monitor Monitor public JSON ({ tags })
+         * @returns {boolean} True if tagged Internal
+         */
+        isInternalMonitor(monitor) {
+            const tags = monitor?.tags || [];
+            return tags.some((tag) => /^internal$/i.test(tag.name));
         },
 
         /**
@@ -319,14 +361,15 @@ export default {
          * @returns {string} One of "up" | "partial" | "down" | "maintenance" | "unknown"
          */
         groupStatusKey(group) {
-            const monitorList = group?.monitorList || [];
+            const monitorList = (group?.monitorList || []).filter((m) => !this.isInternalMonitor(m));
+            const smoothCanary = !this.isExternalGroup(group);
             let hasUp = false;
             let hasDown = false;
             let hasMaintenance = false;
             let count = 0;
 
             for (const monitor of monitorList) {
-                const status = this.statusOfLastHeartbeat(monitor.id);
+                const status = this.statusOfLastHeartbeat(monitor.id, smoothCanary);
                 if (status === undefined || status === null) {
                     continue;
                 }

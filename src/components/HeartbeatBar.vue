@@ -68,6 +68,14 @@ export default {
             type: Number,
             default: 0,
         },
+        /**
+         * Require this many consecutive DOWN beats before painting a beat red.
+         * Used on Arnica canary bars so a single blip does not show as an outage.
+         */
+        downDisplayThreshold: {
+            type: Number,
+            default: 1,
+        },
     },
     data() {
         return {
@@ -590,8 +598,8 @@ export default {
                 // Calculate border radius based on current width (pill shape = half of width)
                 const borderRadius = width / 2;
 
-                // Get color based on beat status
-                let color = this.getBeatColor(beat, colors);
+                // Get color based on beat status (with optional consecutive-down smoothing)
+                let color = this.getBeatColor(beat, colors, index);
 
                 // Draw beat rectangle
                 ctx.fillStyle = color;
@@ -637,9 +645,10 @@ export default {
          * Get color for a beat based on its status
          * @param {object} beat Beat object
          * @param {object} colors Cached CSS colors
+         * @param {number} [index] Index in shortBeatList (for down-streak smoothing)
          * @returns {string} CSS color
          */
-        getBeatColor(beat, colors) {
+        getBeatColor(beat, colors, index = -1) {
             if (beat === 0 || beat === null || beat?.status === null) {
                 return colors.empty;
             }
@@ -647,7 +656,11 @@ export default {
             const status = Number(beat.status);
 
             if (status === DOWN) {
-                return colors.down;
+                if (this.isConfirmedDown(index)) {
+                    return colors.down;
+                }
+                // Transient canary blip — keep the bar green until the streak threshold.
+                return colors.up;
             } else if (status === PENDING) {
                 return colors.pending;
             } else if (status === MAINTENANCE) {
@@ -655,6 +668,34 @@ export default {
             } else {
                 return colors.up;
             }
+        },
+
+        /**
+         * A DOWN beat is only shown as down once `downDisplayThreshold`
+         * consecutive downs end at this index (placeholders skipped).
+         * @param {number} index Index in shortBeatList
+         * @returns {boolean} True if this beat should render as down
+         */
+        isConfirmedDown(index) {
+            const threshold = Math.max(1, Number(this.downDisplayThreshold) || 1);
+            if (threshold <= 1 || index < 0) {
+                return true;
+            }
+
+            let downCount = 0;
+            for (let i = index; i >= 0 && downCount < threshold; i--) {
+                const beat = this.shortBeatList[i];
+                if (beat === 0 || beat === null || beat?.status === null) {
+                    // Placeholder / no data breaks the streak
+                    break;
+                }
+                if (Number(beat.status) !== DOWN) {
+                    break;
+                }
+                downCount += 1;
+            }
+
+            return downCount >= threshold;
         },
 
         /**
