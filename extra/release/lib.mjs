@@ -1,7 +1,6 @@
 import "dotenv/config";
 import * as childProcess from "child_process";
 import semver from "semver";
-import { generateChangelog } from "../generate-changelog.mjs";
 import fs from "fs";
 import tar from "tar";
 
@@ -299,72 +298,48 @@ export async function createDistTarGz() {
 }
 
 /**
- * Create a draft release PR
+ * Land the version bump on master after the image has been pushed.
+ * Opens a PR so branch protection is satisfied, then squash-merges it.
  * @param {string} version Version
- * @param {string} previousVersion Previous version tag
- * @param {boolean} dryRun Still create the PR, but add "[DRY RUN]" to the title
- * @param {string} branchName The branch name to use for the PR head (defaults to "release")
- * @param {string} githubRunId The GitHub Actions run ID for linking to artifacts
- * @returns {Promise<void>}
+ * @param {string} branchName Release branch that already has the version commit
+ * @param {boolean} dryRun Skip landing onto master
+ * @returns {void}
  */
-export async function createReleasePR(version, previousVersion, dryRun, branchName = "release", githubRunId = null) {
-    let changelog;
-    try {
-        changelog = await generateChangelog(previousVersion);
-    } catch (error) {
-        console.warn(`Warning: Could not generate changelog from ${previousVersion}: ${error.message}`);
-        console.warn("Continuing without changelog...");
-        changelog = `_Changelog generation skipped - previous version tag "${previousVersion}" not found._\n`;
+export function landReleaseOnMaster(version, branchName, dryRun) {
+    if (dryRun) {
+        console.log(`[DRY RUN] skip landing ${branchName} onto master`);
+        return;
     }
 
-    const title = dryRun ? `chore: update to ${version} (dry run)` : `chore: update to ${version}`;
+    const env = {
+        ...process.env,
+        GH_TOKEN: process.env.GH_TOKEN || process.env.GITHUB_TOKEN,
+    };
 
-    // Build the artifact link - use direct run link if available, otherwise link to workflow file
-    const artifactLink = githubRunId
-        ? `https://github.com/louislam/uptime-kuma/actions/runs/${githubRunId}/workflow`
-        : `https://github.com/louislam/uptime-kuma/actions/workflows/beta-release.yml`;
+    const title = `chore: update to ${version}`;
+    const body = `Auto-merged by Beta Release after image \`${version}\` was pushed.`;
 
-    const body = `## Release ${version}
+    console.log(`Landing ${version} onto master from ${branchName}`);
 
-This PR prepares the release for version ${version}.
-
-### Manual Steps Required
-- [ ] Merge this PR (squash and merge)
-- [ ] Create a new release on GitHub with the tag \`${version}\`.
-- [ ] Ask any LLM to categorize the changelog into sections.
-- [ ] Place the changelog in the release note.
-- [ ] Download the \`dist.tar.gz\` artifact from the [workflow run](${artifactLink}) and upload it to the release.
-- [ ] (Beta only) Set prerelease
-- [ ] Publish the release note on GitHub.
-
-### Changelog
-
-\`\`\`md
-${changelog}
-\`\`\`
-
-### Release Artifacts
-The \`dist.tar.gz\` archive will be available as an artifact in the workflow run.
-`;
-
-    // Create the PR using gh CLI
-    const args = ["pr", "create", "--title", title, "--body", body, "--base", "master", "--head", branchName, "--draft"];
-
-    console.log(`Creating draft PR: ${title}`);
-
-    const result = childProcess.spawnSync("gh", args, {
-        encoding: "utf-8",
-        stdio: "inherit",
-        env: {
-            ...process.env,
-            GH_TOKEN: process.env.GH_TOKEN || process.env.GITHUB_TOKEN,
-        },
-    });
-
-    if (result.status !== 0) {
-        console.error("Failed to create pull request");
+    const created = childProcess.spawnSync(
+        "gh",
+        ["pr", "create", "--title", title, "--body", body, "--base", "master", "--head", branchName],
+        { encoding: "utf-8", stdio: "inherit", env }
+    );
+    if (created.status !== 0) {
+        console.error("Failed to create release PR");
         process.exit(1);
     }
 
-    console.log("Successfully created draft pull request");
+    const merged = childProcess.spawnSync(
+        "gh",
+        ["pr", "merge", branchName, "--squash", "--admin", "--delete-branch"],
+        { encoding: "utf-8", stdio: "inherit", env }
+    );
+    if (merged.status !== 0) {
+        console.error("Failed to merge release PR onto master");
+        process.exit(1);
+    }
+
+    console.log(`Landed ${version} on master`);
 }

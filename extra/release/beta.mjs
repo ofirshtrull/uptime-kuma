@@ -7,19 +7,16 @@ import {
     checkTagExists,
     checkVersionFormat,
     getRepoNames,
-    execSync,
     checkReleaseBranch,
     createDistTarGz,
-    createReleasePR,
+    landReleaseOnMaster,
 } from "./lib.mjs";
 import semver from "semver";
 
 const repoNames = getRepoNames();
 const version = process.env.RELEASE_BETA_VERSION;
 const dryRun = process.env.DRY_RUN === "true";
-const previousVersion = process.env.RELEASE_PREVIOUS_VERSION;
 const branchName = `release-${version}`;
-const githubRunId = process.env.GITHUB_RUN_ID;
 
 if (dryRun) {
     console.log("Dry run mode enabled. No images will be pushed.");
@@ -52,9 +49,6 @@ await checkTagExists(repoNames, version);
 // node extra/beta/update-version.js
 await import("../beta/update-version.mjs");
 
-// Create Pull Request (gh pr create will handle pushing the branch)
-await createReleasePR(version, previousVersion, dryRun, branchName, githubRunId);
-
 // Build frontend dist
 buildDist();
 
@@ -81,3 +75,7 @@ if (!dryRun) {
 
 // Create dist.tar.gz
 await createDistTarGz();
+
+// Version bump lands on master only after the image exists, so failed
+// builds do not leave draft PRs behind.
+landReleaseOnMaster(version, branchName, dryRun);
