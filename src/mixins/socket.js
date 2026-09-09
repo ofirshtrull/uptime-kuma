@@ -12,15 +12,12 @@ import {
     getToastSuccessTimeout,
     getToastErrorTimeout,
 } from "../util-frontend.js";
+import { STATUS_PAGE_PATHS, shouldToastHeartbeat } from "../util-status-page-toast.js";
 const toast = useToast();
 
 let socket;
 
-const noSocketIOPages = [
-    /^\/status-page$/, //  /status-page
-    /^\/status/, // /status**
-    /^\/$/, //  /
-];
+const noSocketIOPages = STATUS_PAGE_PATHS;
 
 const favicon = new Favico({
     animation: "none",
@@ -222,9 +219,12 @@ export default {
                 }
 
                 // Add to important list if it is important
-                // Also toast
+                // Also toast — status page only toasts monitors listed on that page
                 if (data.important) {
-                    if (this.monitorList[data.monitorID] !== undefined) {
+                    if (
+                        this.monitorList[data.monitorID] !== undefined &&
+                        shouldToastHeartbeat(location.pathname, this.publicMonitorList, data.monitorID)
+                    ) {
                         if (data.status === 0) {
                             toast.error(`[${this.monitorList[data.monitorID].name}] [DOWN] ${data.msg}`, {
                                 timeout: getToastErrorTimeout(),
