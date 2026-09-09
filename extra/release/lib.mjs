@@ -337,7 +337,9 @@ export function landReleaseOnMaster(version, branchName, dryRun) {
         { encoding: "utf-8", stdio: "inherit", env }
     );
     if (merged.status !== 0) {
-        console.error("Failed to merge release PR onto master");
+        console.error(
+            "Failed to merge release PR onto master. GH_TOKEN must be a repo-admin PAT (secret GH_PAT); github-actions[bot] cannot bypass required reviews."
+        );
         process.exit(1);
     }
 
