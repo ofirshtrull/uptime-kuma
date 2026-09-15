@@ -42,78 +42,84 @@
 
             <div class="dropdown d-inline-block me-2">
                 <button
-                    id="dropdownMenuButton1"
+                    :id="styleDropdownId"
                     class="btn btn-secondary dropdown-toggle"
                     type="button"
                     data-bs-toggle="dropdown"
+                    data-testid="incident-style-dropdown"
                     aria-expanded="false"
                 >
                     {{ $t("Style") }}: {{ $t(modelValue.style) }}
                 </button>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                <ul class="dropdown-menu" :aria-labelledby="styleDropdownId">
                     <li>
-                        <a class="dropdown-item" href="#" @click.prevent="updateField('style', 'info')">
+                        <button type="button" class="dropdown-item" @click="updateField('style', 'info')">
                             {{ $t("info") }}
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#" @click.prevent="updateField('style', 'warning')">
+                        <button type="button" class="dropdown-item" @click="updateField('style', 'warning')">
                             {{ $t("warning") }}
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#" @click.prevent="updateField('style', 'danger')">
+                        <button type="button" class="dropdown-item" @click="updateField('style', 'danger')">
                             {{ $t("danger") }}
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#" @click.prevent="updateField('style', 'primary')">
+                        <button type="button" class="dropdown-item" @click="updateField('style', 'primary')">
                             {{ $t("primary") }}
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#" @click.prevent="updateField('style', 'light')">
+                        <button type="button" class="dropdown-item" @click="updateField('style', 'light')">
                             {{ $t("light") }}
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#" @click.prevent="updateField('style', 'dark')">
+                        <button type="button" class="dropdown-item" @click="updateField('style', 'dark')">
                             {{ $t("dark") }}
-                        </a>
+                        </button>
                     </li>
                 </ul>
             </div>
 
             <div class="dropdown d-inline-block me-2">
                 <button
-                    id="dropdownStatusButton"
+                    :id="statusDropdownId"
                     class="btn btn-secondary dropdown-toggle"
                     type="button"
                     data-bs-toggle="dropdown"
+                    data-testid="incident-status-dropdown"
                     aria-expanded="false"
                 >
                     Status: {{ statusLabel }}
                 </button>
-                <ul class="dropdown-menu" aria-labelledby="dropdownStatusButton">
+                <ul class="dropdown-menu" :aria-labelledby="statusDropdownId">
                     <li>
-                        <a class="dropdown-item" href="#" @click.prevent="updateField('status', 'investigating')">
+                        <button
+                            type="button"
+                            class="dropdown-item"
+                            @click="updateField('status', 'investigating')"
+                        >
                             Investigating
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#" @click.prevent="updateField('status', 'identified')">
+                        <button type="button" class="dropdown-item" @click="updateField('status', 'identified')">
                             Identified
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#" @click.prevent="updateField('status', 'monitoring')">
+                        <button type="button" class="dropdown-item" @click="updateField('status', 'monitoring')">
                             Monitoring
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#" @click.prevent="updateField('status', 'resolved')">
+                        <button type="button" class="dropdown-item" @click="updateField('status', 'resolved')">
                             Resolved
-                        </a>
+                        </button>
                     </li>
                 </ul>
             </div>
@@ -138,6 +144,12 @@ export default {
                 return "None";
             }
             return s.charAt(0).toUpperCase() + s.slice(1);
+        },
+        styleDropdownId() {
+            return "incident-style-dropdown-" + (this.modelValue.id || "new");
+        },
+        statusDropdownId() {
+            return "incident-status-dropdown-" + (this.modelValue.id || "new");
         },
     },
     methods: {

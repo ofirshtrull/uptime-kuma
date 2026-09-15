@@ -52,6 +52,16 @@
                             </select>
                         </div>
 
+                        <div class="mb-3">
+                            <label for="incident-status" class="form-label">{{ $t("Status") }}</label>
+                            <select id="incident-status" v-model="form.status" class="form-select">
+                                <option value="investigating">Investigating</option>
+                                <option value="identified">Identified</option>
+                                <option value="monitoring">Monitoring</option>
+                                <option value="resolved">Resolved</option>
+                            </select>
+                        </div>
+
                         <div class="mb-3 form-check">
                             <input id="incident-pin" v-model="form.pin" type="checkbox" class="form-check-input" />
                             <label for="incident-pin" class="form-check-label">
@@ -102,7 +112,7 @@ export default {
             required: true,
         },
     },
-    emits: ["incident-updated"],
+    emits: ["incident-updated", "incident-deleted"],
     data() {
         return {
             modal: null,
@@ -113,6 +123,7 @@ export default {
                 title: "",
                 content: "",
                 style: "warning",
+                status: "investigating",
                 pin: true,
             },
         };
@@ -132,7 +143,8 @@ export default {
                 title: incident.title,
                 content: incident.content,
                 style: incident.style || "warning",
-                pin: !!incident.pin,
+                status: incident.status || (incident.active ? "investigating" : "resolved"),
+                pin: incident.status === "resolved" ? true : !!incident.pin,
             };
             this.modal.show();
         },
@@ -164,12 +176,13 @@ export default {
 
             this.processing = true;
 
+            this.$root.initSocketIO(true);
             this.$root.getSocket().emit("editIncident", this.slug, this.incidentId, this.form, (res) => {
                 this.processing = false;
                 this.$root.toastRes(res);
                 if (res.ok) {
                     this.modal.hide();
-                    this.$emit("incident-updated");
+                    this.$emit("incident-updated", res.incident);
                 }
             });
         },
@@ -183,12 +196,16 @@ export default {
                 return;
             }
 
-            this.$root.getSocket().emit("deleteIncident", this.slug, this.pendingDeleteIncident.id, (res) => {
+            const incidentId = this.pendingDeleteIncident.id;
+            this.$root.initSocketIO(true);
+            this.$root.getSocket().emit("deleteIncident", this.slug, incidentId, (res) => {
                 this.$root.toastRes(res);
                 if (res.ok) {
-                    this.$emit("incident-updated");
+                    this.$emit("incident-deleted", incidentId);
                 }
-                this.pendingDeleteIncident = null;
+                if (this.pendingDeleteIncident && this.pendingDeleteIncident.id === incidentId) {
+                    this.pendingDeleteIncident = null;
+                }
             });
         },
     },

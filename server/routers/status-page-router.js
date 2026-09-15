@@ -142,8 +142,9 @@ router.get("/api/status-page/:slug/manifest.json", cache("1440 minutes"), async 
     }
 });
 
-router.get("/api/status-page/:slug/incident-history", cache("5 minutes"), async (request, response) => {
+router.get("/api/status-page/:slug/incident-history", async (request, response) => {
     allowDevAllOrigin(response);
+    response.set("Cache-Control", "no-store");
 
     try {
         let slug = request.params.slug;

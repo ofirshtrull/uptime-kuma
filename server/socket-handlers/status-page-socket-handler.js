@@ -8,8 +8,6 @@ const apicache = require("../modules/apicache");
 const StatusPage = require("../model/status_page");
 const { UptimeKumaServer } = require("../uptime-kuma-server");
 
-const VALID_INCIDENT_STATUSES = ["investigating", "identified", "monitoring", "resolved"];
-
 /**
  * Validates incident data
  * @param {object} incident - The incident object
@@ -23,18 +21,6 @@ function validateIncident(incident) {
     if (!incident.content || incident.content.trim() === "") {
         throw new Error("Please input content");
     }
-}
-
-/**
- * Format a status label for display (e.g. "investigating" -> "Investigating")
- * @param {string} status The status value
- * @returns {string} Capitalized status label
- */
-function formatStatusLabel(status) {
-    if (!status) {
-        return "";
-    }
-    return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
 /**
@@ -73,23 +59,7 @@ module.exports.statusPageSocketHandler = (socket) => {
             incidentBean.pin = true;
             incidentBean.active = true;
             incidentBean.status_page_id = statusPageID;
-
-            const newStatus = incident.status;
-            if (newStatus && VALID_INCIDENT_STATUSES.includes(newStatus)) {
-                const oldStatus = incidentBean.status;
-                incidentBean.status = newStatus;
-
-                if (oldStatus && oldStatus !== newStatus) {
-                    const timestamp = dayjs.utc().format("MMM D, HH:mm [UTC]");
-                    const label = formatStatusLabel(newStatus);
-                    incidentBean.content += `\n\n---\n**[${timestamp}] ${label}**`;
-                }
-
-                if (newStatus === "resolved") {
-                    incidentBean.active = false;
-                    incidentBean.pin = false;
-                }
-            }
+            incidentBean.applyStatus(incident.status);
 
             if (incident.id) {
                 incidentBean.last_updated_date = R.isoDateTime(dayjs.utc());
@@ -98,6 +68,7 @@ module.exports.statusPageSocketHandler = (socket) => {
             }
 
             await R.store(incidentBean);
+            apicache.clear();
 
             callback({
                 ok: true,
@@ -118,6 +89,7 @@ module.exports.statusPageSocketHandler = (socket) => {
             let statusPageID = await StatusPage.slugToID(slug);
 
             await R.exec("UPDATE incident SET pin = 0 WHERE pin = 1 AND status_page_id = ? ", [statusPageID]);
+            apicache.clear();
 
             callback({
                 ok: true,
@@ -194,28 +166,15 @@ module.exports.statusPageSocketHandler = (socket) => {
             bean.title = incident.title;
             bean.content = incident.content;
             bean.style = incident.style;
-            bean.pin = incident.pin !== false;
-
-            const newStatus = incident.status;
-            if (newStatus && VALID_INCIDENT_STATUSES.includes(newStatus)) {
-                const oldStatus = bean.status;
-                bean.status = newStatus;
-
-                if (oldStatus && oldStatus !== newStatus) {
-                    const timestamp = dayjs.utc().format("MMM D, HH:mm [UTC]");
-                    const label = formatStatusLabel(newStatus);
-                    bean.content += `\n\n---\n**[${timestamp}] ${label}**`;
-                }
-
-                if (newStatus === "resolved") {
-                    bean.active = false;
-                    bean.pin = false;
-                }
+            bean.applyStatus(incident.status);
+            if (bean.status !== "resolved") {
+                bean.pin = incident.pin !== false;
             }
 
             bean.last_updated_date = R.isoDateTime(dayjs.utc());
 
             await R.store(bean);
+            apicache.clear();
 
             callback({
                 ok: true,
@@ -257,6 +216,7 @@ module.exports.statusPageSocketHandler = (socket) => {
             }
 
             await R.trash(bean);
+            apicache.clear();
 
             callback({
                 ok: true,
@@ -297,6 +257,7 @@ module.exports.statusPageSocketHandler = (socket) => {
             }
 
             await bean.resolve();
+            apicache.clear();
 
             callback({
                 ok: true,

@@ -556,7 +556,8 @@
                 v-if="hasToken"
                 ref="incidentManageModal"
                 :slug="slug"
-                @incident-updated="loadIncidentHistory"
+                @incident-updated="onIncidentUpdated"
+                @incident-deleted="onIncidentDeleted"
             />
 
             <footer class="mt-5 mb-4">
@@ -646,6 +647,7 @@ import {
     MAINTENANCE,
 } from "../util.ts";
 import { isExternalGroup as detectExternalGroup } from "../util-external-group.js";
+import { upsertIncident, removeIncident, isActivePinned } from "../util-incident-history.js";
 import Tag from "../components/Tag.vue";
 import VueMultiselect from "vue-multiselect";
 
@@ -946,7 +948,7 @@ export default {
          * @returns {object[]} List of active pinned incidents
          */
         activeIncidents() {
-            return this.incidentHistory.filter((i) => i.active && i.pin);
+            return this.incidentHistory.filter(isActivePinned);
         },
 
         /**
@@ -954,7 +956,7 @@ export default {
          * @returns {number} Number of past incidents
          */
         pastIncidentCount() {
-            return this.incidentHistory.filter((i) => !(i.active && i.pin)).length;
+            return this.incidentHistory.filter((i) => !isActivePinned(i)).length;
         },
 
         /**
@@ -964,7 +966,7 @@ export default {
          */
         groupedIncidentHistory() {
             const groups = {};
-            const pastIncidents = this.incidentHistory.filter((i) => !(i.active && i.pin));
+            const pastIncidents = this.incidentHistory.filter((i) => !isActivePinned(i));
             for (const incident of pastIncidents) {
                 const dateKey = this.formatDateKey(incident.createdDate);
                 if (!groups[dateKey]) {
@@ -1383,6 +1385,7 @@ export default {
                 title: "",
                 content: "",
                 style: "primary",
+                status: "investigating",
             };
         },
 
@@ -1396,11 +1399,12 @@ export default {
                 return;
             }
 
+            this.$root.initSocketIO(true);
             this.$root.getSocket().emit("postIncident", this.slug, this.incident, (res) => {
                 if (res.ok) {
                     this.enableEditIncidentMode = false;
                     this.incident = null;
-                    this.loadIncidentHistory();
+                    this.applyIncidentUpdate(res.incident);
                 } else {
                     this.$root.toastError(res.msg);
                 }
@@ -1413,6 +1417,7 @@ export default {
          * @returns {void}
          */
         editIncident(incident) {
+            this.$root.initSocketIO(true);
             this.previousIncident = this.incident;
             this.incident = { ...incident };
             this.enableEditIncidentMode = true;
@@ -1508,7 +1513,7 @@ export default {
         loadIncidentHistoryWithCursor(cursor, append = false) {
             this.incidentHistoryLoading = true;
 
-            if (this.enableEditMode) {
+            if (this.hasToken && this.$root.socket.connected) {
                 this.$root.getSocket().emit("getIncidentHistory", this.slug, cursor, (res) => {
                     this.incidentHistoryLoading = false;
                     if (res.ok) {
@@ -1586,9 +1591,40 @@ export default {
             this.$root.getSocket().emit("resolveIncident", this.slug, incident.id, (res) => {
                 this.$root.toastRes(res);
                 if (res.ok) {
-                    this.loadIncidentHistory();
+                    this.applyIncidentUpdate(res.incident);
                 }
             });
+        },
+
+        /**
+         * Apply a socket-returned incident so the banner updates even if
+         * the public incident-history GET is still serving a stale cache.
+         * @param {object} incident Saved incident from the server
+         * @returns {void}
+         */
+        applyIncidentUpdate(incident) {
+            if (!incident?.id) {
+                this.loadIncidentHistory();
+                return;
+            }
+            this.incidentHistory = upsertIncident(this.incidentHistory, incident);
+        },
+
+        /**
+         * Drop an incident from local history after delete.
+         * @param {number|string} incidentId Deleted incident id
+         * @returns {void}
+         */
+        applyIncidentDelete(incidentId) {
+            this.incidentHistory = removeIncident(this.incidentHistory, incidentId);
+        },
+
+        onIncidentUpdated(incident) {
+            this.applyIncidentUpdate(incident);
+        },
+
+        onIncidentDeleted(incidentId) {
+            this.applyIncidentDelete(incidentId);
         },
     },
 };
