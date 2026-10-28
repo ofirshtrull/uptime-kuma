@@ -1,5 +1,7 @@
 const { describe, test } = require("node:test");
 const assert = require("node:assert");
+const dayjs = require("dayjs");
+const { R } = require("redbean-node");
 const Incident = require("../../server/model/incident");
 
 describe("Incident.applyIncidentStatus", () => {
@@ -60,5 +62,33 @@ describe("Incident.applyIncidentStatus", () => {
         Incident.applyIncidentStatus(bean, "resolved");
         assert.strictEqual(bean.pin, false);
         assert.strictEqual(bean.active, false);
+    });
+});
+
+describe("Incident.parseCreatedDate", () => {
+    test("empty keeps the current date", () => {
+        assert.strictEqual(Incident.parseCreatedDate(""), null);
+        assert.strictEqual(Incident.parseCreatedDate(undefined), null);
+    });
+
+    test("UTC input is stored in DB format", () => {
+        assert.strictEqual(Incident.parseCreatedDate("2026-10-28 14:08:00"), "2026-10-28 14:08:00");
+        assert.strictEqual(Incident.parseCreatedDate("2026-10-28T14:08:00.000Z"), "2026-10-28 14:08:00");
+    });
+
+    test("rejects malformed, non-string and future dates", () => {
+        const future = dayjs.utc().add(1, "day").format("YYYY-MM-DD HH:mm:ss");
+        for (const value of ["garbage", 1793000000000, { $gt: "" }, future]) {
+            assert.throws(() => Incident.parseCreatedDate(value), /valid date/);
+        }
+    });
+
+    test("applyCreatedDate only overwrites when a date is given", () => {
+        const bean = new Incident("incident", R);
+        bean.created_date = "2026-01-01 00:00:00";
+        bean.applyCreatedDate("");
+        assert.strictEqual(bean.created_date, "2026-01-01 00:00:00");
+        bean.applyCreatedDate("2026-02-01 12:00:00");
+        assert.strictEqual(bean.created_date, "2026-02-01 12:00:00");
     });
 });

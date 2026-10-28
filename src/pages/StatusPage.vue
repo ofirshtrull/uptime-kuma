@@ -336,18 +336,14 @@
                         </span>
                     </h4>
                     <!-- eslint-disable vue/no-v-html -->
-                    <div
-                        class="content"
-                        data-testid="incident-content"
-                        v-html="getIncidentHTML(activeIncident.content)"
-                    ></div>
+                    <div class="content" data-testid="incident-content" v-html="getIncidentHTML(activeIncident)"></div>
                     <!-- eslint-enable vue/no-v-html -->
 
                     <!-- Incident Date -->
                     <div class="date mt-3">
                         {{
                             $t("dateCreatedAtFromNow", {
-                                date: $root.datetime(activeIncident.createdDate),
+                                date: formatStatusTime(activeIncident.createdDate),
                                 fromNow: dateFromNow(activeIncident.createdDate),
                             })
                         }}
@@ -355,7 +351,7 @@
                         <span v-if="activeIncident.lastUpdatedDate">
                             {{
                                 $t("lastUpdatedAtFromNow", {
-                                    date: $root.datetime(activeIncident.lastUpdatedDate),
+                                    date: formatStatusTime(activeIncident.lastUpdatedDate),
                                     fromNow: dateFromNow(activeIncident.lastUpdatedDate),
                                 })
                             }}
@@ -510,12 +506,16 @@
             </div>
 
             <!-- Past Incidents -->
-            <div v-if="pastIncidentCount > 0" class="past-incidents-section mb-4">
+            <div
+                v-if="pastIncidentCount > 0 || incidentHistoryPage > 1 || incidentHistoryHasMore"
+                class="past-incidents-section mb-4"
+            >
                 <h2 class="past-incidents-title mb-3">
                     {{ $t("Past Incidents") }}
                 </h2>
 
                 <div class="past-incidents-content">
+                    <p v-if="pastIncidentCount === 0" class="text-muted">{{ $t("noIncidentsInPeriod") }}</p>
                     <div
                         v-for="(dateGroup, dateKey) in groupedIncidentHistory"
                         :key="dateKey"
@@ -534,18 +534,25 @@
                         </div>
                     </div>
 
-                    <div v-if="incidentHistoryHasMore" class="load-more-controls d-flex justify-content-center mt-3">
+                    <div
+                        v-if="incidentHistoryPage > 1 || incidentHistoryHasMore"
+                        class="d-flex justify-content-between align-items-center mt-3"
+                        data-testid="incident-history-pager"
+                    >
                         <button
                             class="btn btn-outline-secondary btn-sm"
-                            :disabled="incidentHistoryLoading"
-                            @click="loadMoreIncidentHistory"
+                            :disabled="incidentHistoryLoading || incidentHistoryPage === 1"
+                            @click="loadIncidentHistory(incidentHistoryPage - 1)"
                         >
-                            <span
-                                v-if="incidentHistoryLoading"
-                                class="spinner-border spinner-border-sm me-1"
-                                role="status"
-                            ></span>
-                            {{ $t("Load More") }}
+                            &lsaquo; {{ $t("Newer") }}
+                        </button>
+                        <span class="text-muted small">{{ incidentHistoryRange }}</span>
+                        <button
+                            class="btn btn-outline-secondary btn-sm"
+                            :disabled="incidentHistoryLoading || !incidentHistoryHasMore"
+                            @click="loadIncidentHistory(incidentHistoryPage + 1)"
+                        >
+                            {{ $t("Older") }} &rsaquo;
                         </button>
                     </div>
                 </div>
@@ -647,7 +654,13 @@ import {
     MAINTENANCE,
 } from "../util.ts";
 import { isExternalGroup as detectExternalGroup } from "../util-external-group.js";
-import { upsertIncident, removeIncident, isActivePinned } from "../util-incident-history.js";
+import {
+    removeIncident,
+    isActivePinned,
+    formatStatusTime,
+    localizeIncidentStamps,
+    STATUS_PAGE_TIMEZONE,
+} from "../util-incident-history.js";
 import Tag from "../components/Tag.vue";
 import VueMultiselect from "vue-multiselect";
 
@@ -722,8 +735,10 @@ export default {
             loading: true,
             incidentHistory: [],
             incidentHistoryLoading: false,
-            incidentHistoryNextCursor: null,
+            incidentHistoryPage: 1,
             incidentHistoryHasMore: false,
+            incidentHistoryFrom: null,
+            incidentHistoryTo: null,
         };
     },
     computed: {
@@ -940,7 +955,18 @@ export default {
         },
 
         lastUpdateTimeDisplay() {
-            return this.$root.datetime(this.lastUpdateTime);
+            return formatStatusTime(this.lastUpdateTime);
+        },
+
+        /**
+         * Date range of the incident history page shown
+         * @returns {string} e.g. "September 28, 2026 – October 28, 2026"
+         */
+        incidentHistoryRange() {
+            if (!this.incidentHistoryFrom) {
+                return "";
+            }
+            return `${this.formatDateKey(this.incidentHistoryFrom)} – ${this.formatDateKey(this.incidentHistoryTo)}`;
         },
 
         /**
@@ -1404,7 +1430,7 @@ export default {
                 if (res.ok) {
                     this.enableEditIncidentMode = false;
                     this.incident = null;
-                    this.applyIncidentUpdate(res.incident);
+                    this.applyIncidentUpdate();
                 } else {
                     this.$root.toastError(res.msg);
                 }
@@ -1448,15 +1474,17 @@ export default {
 
         /**
          * Get HTML for incident content
-         * @param {string} content - Markdown content
+         * @param {object} incident - Incident with markdown content
          * @returns {string} Sanitized HTML
          */
-        getIncidentHTML(content) {
-            if (content != null) {
-                return DOMPurify.sanitize(marked(content));
+        getIncidentHTML(incident) {
+            if (incident.content != null) {
+                return DOMPurify.sanitize(marked(localizeIncidentStamps(incident.content, incident.createdDate)));
             }
             return "";
         },
+
+        formatStatusTime,
 
         formatIncidentStatus(status) {
             if (!status) {
@@ -1497,54 +1525,38 @@ export default {
         },
 
         /**
-         * Load incident history for the status page
+         * Load one 30-day page of incident history
+         * @param {number} page - 1 is the last 30 days, higher is older
          * @returns {void}
          */
-        loadIncidentHistory() {
-            this.loadIncidentHistoryWithCursor(null);
-        },
-
-        /**
-         * Load incident history using cursor-based pagination
-         * @param {string|null} cursor - Cursor for pagination (created_date of last item)
-         * @param {boolean} append - Whether to append to existing list
-         * @returns {void}
-         */
-        loadIncidentHistoryWithCursor(cursor, append = false) {
+        loadIncidentHistory(page = 1) {
             this.incidentHistoryLoading = true;
 
+            const apply = (data) => {
+                this.incidentHistory = data.incidents;
+                this.incidentHistoryPage = data.page;
+                this.incidentHistoryHasMore = data.hasMore;
+                this.incidentHistoryFrom = data.from;
+                this.incidentHistoryTo = data.to;
+            };
+
             if (this.hasToken && this.$root.socket.connected) {
-                this.$root.getSocket().emit("getIncidentHistory", this.slug, cursor, (res) => {
+                this.$root.getSocket().emit("getIncidentHistory", this.slug, page, (res) => {
                     this.incidentHistoryLoading = false;
                     if (res.ok) {
-                        if (append) {
-                            this.incidentHistory = [...this.incidentHistory, ...res.incidents];
-                        } else {
-                            this.incidentHistory = res.incidents;
-                        }
-                        this.incidentHistoryNextCursor = res.nextCursor;
-                        this.incidentHistoryHasMore = res.hasMore;
+                        apply(res);
                     } else {
                         console.error("Failed to load incident history:", res.msg);
                         this.$root.toastError(res.msg);
                     }
                 });
             } else {
-                const url = cursor
-                    ? `/api/status-page/${this.slug}/incident-history?cursor=${encodeURIComponent(cursor)}`
-                    : `/api/status-page/${this.slug}/incident-history`;
                 axios
-                    .get(url)
+                    .get(`/api/status-page/${this.slug}/incident-history`, { params: { page } })
                     .then((res) => {
                         this.incidentHistoryLoading = false;
                         if (res.data.ok) {
-                            if (append) {
-                                this.incidentHistory = [...this.incidentHistory, ...res.data.incidents];
-                            } else {
-                                this.incidentHistory = res.data.incidents;
-                            }
-                            this.incidentHistoryNextCursor = res.data.nextCursor;
-                            this.incidentHistoryHasMore = res.data.hasMore;
+                            apply(res.data);
                         }
                     })
                     .catch((error) => {
@@ -1555,26 +1567,16 @@ export default {
         },
 
         /**
-         * Load more incident history using cursor-based pagination
-         * @returns {void}
-         */
-        loadMoreIncidentHistory() {
-            if (this.incidentHistoryHasMore && this.incidentHistoryNextCursor) {
-                this.loadIncidentHistoryWithCursor(this.incidentHistoryNextCursor, true);
-            }
-        },
-
-        /**
          * Format date key for grouping (e.g., "December 8, 2025")
-         * @param {string} dateStr - ISO date string
+         * @param {string} dateStr - UTC date string
          * @returns {string} Formatted date key
          */
         formatDateKey(dateStr) {
             if (!dateStr) {
                 return this.$t("Unknown");
             }
-            const date = new Date(dateStr);
-            return date.toLocaleDateString(undefined, {
+            return dayjs.utc(dateStr).toDate().toLocaleDateString(undefined, {
+                timeZone: STATUS_PAGE_TIMEZONE,
                 year: "numeric",
                 month: "long",
                 day: "numeric",
@@ -1591,23 +1593,18 @@ export default {
             this.$root.getSocket().emit("resolveIncident", this.slug, incident.id, (res) => {
                 this.$root.toastRes(res);
                 if (res.ok) {
-                    this.applyIncidentUpdate(res.incident);
+                    this.applyIncidentUpdate();
                 }
             });
         },
 
         /**
-         * Apply a socket-returned incident so the banner updates even if
-         * the public incident-history GET is still serving a stale cache.
-         * @param {object} incident Saved incident from the server
+         * Reload the shown history page after a save. Only the server knows which
+         * 30-day page an incident is on once its created time or pin state changes.
          * @returns {void}
          */
-        applyIncidentUpdate(incident) {
-            if (!incident?.id) {
-                this.loadIncidentHistory();
-                return;
-            }
-            this.incidentHistory = upsertIncident(this.incidentHistory, incident);
+        applyIncidentUpdate() {
+            this.loadIncidentHistory(this.incidentHistoryPage);
         },
 
         /**
@@ -1619,8 +1616,8 @@ export default {
             this.incidentHistory = removeIncident(this.incidentHistory, incidentId);
         },
 
-        onIncidentUpdated(incident) {
-            this.applyIncidentUpdate(incident);
+        onIncidentUpdated() {
+            this.applyIncidentUpdate();
         },
 
         onIncidentDeleted(incidentId) {

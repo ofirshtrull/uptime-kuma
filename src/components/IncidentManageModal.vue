@@ -62,6 +62,17 @@
                             </select>
                         </div>
 
+                        <div class="mb-3">
+                            <label for="incident-created" class="form-label">{{ $t("Created (ET)") }}</label>
+                            <input
+                                id="incident-created"
+                                type="datetime-local"
+                                class="form-control"
+                                :value="toStatusInputTime(form.createdDate)"
+                                @input="form.createdDate = fromStatusInputTime($event.target.value)"
+                            />
+                        </div>
+
                         <div class="mb-3 form-check">
                             <input id="incident-pin" v-model="form.pin" type="checkbox" class="form-check-input" />
                             <label for="incident-pin" class="form-check-label">
@@ -100,6 +111,7 @@
 <script>
 import { Modal } from "bootstrap";
 import Confirm from "./Confirm.vue";
+import { fromStatusInputTime, toStatusInputTime } from "../util-incident-history.js";
 
 export default {
     name: "IncidentManageModal",
@@ -125,6 +137,7 @@ export default {
                 style: "warning",
                 status: "investigating",
                 pin: true,
+                createdDate: "",
             },
         };
     },
@@ -132,6 +145,9 @@ export default {
         this.modal = new Modal(this.$refs.modal);
     },
     methods: {
+        fromStatusInputTime,
+        toStatusInputTime,
+
         /**
          * Show the modal for editing an existing incident
          * @param {object} incident - The incident to edit
@@ -145,6 +161,7 @@ export default {
                 style: incident.style || "warning",
                 status: incident.status || (incident.active ? "investigating" : "resolved"),
                 pin: incident.status === "resolved" ? true : !!incident.pin,
+                createdDate: incident.createdDate,
             };
             this.modal.show();
         },

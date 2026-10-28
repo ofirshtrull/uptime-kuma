@@ -25,6 +25,7 @@ function applyIncidentStatus(bean, newStatus) {
     bean.status = newStatus;
 
     if (oldStatus && oldStatus !== newStatus) {
+        // Parsed by localizeIncidentStamps (src/util-incident-history.js); keep the format in sync.
         const timestamp = dayjs.utc().format("MMM D, HH:mm [UTC]");
         const label = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
         bean.content += `\n\n---\n**[${timestamp}] ${label}**`;
@@ -40,7 +41,38 @@ function applyIncidentStatus(bean, newStatus) {
     return bean;
 }
 
+/**
+ * Parse an admin-supplied created date for an incident.
+ * @param {unknown} value UTC date from the edit form, empty to keep the current one
+ * @returns {string|null} DB datetime, or null when empty
+ * @throws {Error} If the date is malformed or in the future
+ */
+function parseIncidentCreatedDate(value) {
+    if (!value) {
+        return null;
+    }
+    const date = typeof value === "string" ? dayjs.utc(value) : null;
+    // Agentic Rule (ARNIE_INPUT_PARAMETER_VALIDATION): only a real, non-future date string is stored.
+    if (!date?.isValid() || date.isAfter(dayjs.utc().add(5, "minute"))) {
+        throw new Error("Created time must be a valid date, not in the future");
+    }
+    return R.isoDateTime(date);
+}
+
 class Incident extends BeanModel {
+    /**
+     * Set created_date from the edit form; empty keeps the current value.
+     * @param {unknown} value UTC date from the edit form
+     * @returns {void}
+     * @throws {Error} If the date is malformed or in the future
+     */
+    applyCreatedDate(value) {
+        const createdDate = parseIncidentCreatedDate(value);
+        if (createdDate) {
+            this.created_date = createdDate;
+        }
+    }
+
     /**
      * Apply a public incident status and keep pin/active in sync.
      * @param {string} newStatus Status value from the UI
@@ -81,6 +113,7 @@ class Incident extends BeanModel {
 }
 
 Incident.applyIncidentStatus = applyIncidentStatus;
+Incident.parseCreatedDate = parseIncidentCreatedDate;
 Incident.VALID_STATUSES = VALID_INCIDENT_STATUSES;
 
 module.exports = Incident;

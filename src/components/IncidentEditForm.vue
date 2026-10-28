@@ -30,6 +30,21 @@
         </div>
 
         <div class="mt-3">
+            <label class="form-label mb-1" :for="createdInputId">
+                <strong>{{ $t("Created (ET)") }}:</strong>
+            </label>
+            <input
+                :id="createdInputId"
+                type="datetime-local"
+                class="form-control created-input"
+                data-testid="incident-created-input"
+                :value="toStatusInputTime(modelValue.createdDate)"
+                @input="updateField('createdDate', fromStatusInputTime($event.target.value))"
+            />
+            <div v-if="!modelValue.id" class="form-text">{{ $t("createdTimeEmptyHint") }}</div>
+        </div>
+
+        <div class="mt-3">
             <button class="btn btn-light me-2" data-testid="post-incident-button" @click="$emit('post')">
                 <font-awesome-icon icon="bullhorn" />
                 {{ $t("Post") }}
@@ -128,6 +143,8 @@
 </template>
 
 <script>
+import { fromStatusInputTime, toStatusInputTime } from "../util-incident-history.js";
+
 export default {
     name: "IncidentEditForm",
     props: {
@@ -151,8 +168,13 @@ export default {
         statusDropdownId() {
             return "incident-status-dropdown-" + (this.modelValue.id || "new");
         },
+        createdInputId() {
+            return "incident-created-" + (this.modelValue.id || "new");
+        },
     },
     methods: {
+        fromStatusInputTime,
+        toStatusInputTime,
         updateField(field, value) {
             this.$emit("update:modelValue", {
                 ...this.modelValue,
@@ -169,6 +191,10 @@ export default {
         &[contenteditable="true"] {
             min-height: 60px;
         }
+    }
+
+    .created-input {
+        max-width: 16rem;
     }
 }
 </style>

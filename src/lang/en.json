@@ -1436,5 +1436,11 @@
     "TLS Alert Spec": "RFC 8446",
     "mariadbSocketPathDetectedHelptext": "Connecting to the database as specified via the {0} environment variable.",
     "Expand All Groups": "Expand All Groups",
-    "Collapse All Groups": "Collapse All Groups"
+    "Collapse All Groups": "Collapse All Groups",
+    "Newer": "Newer",
+    "Older": "Older",
+    "noIncidentsInPeriod": "No incidents reported in this period.",
+    "Created (ET)": "Created (ET)",
+    "createdTimeEmptyHint": "Leave empty to use the time you post.",
+    "Created time must be a valid date, not in the future": "Created time must be a valid date, not in the future"
 }

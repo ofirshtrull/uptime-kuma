@@ -47,11 +47,11 @@
                         </div>
                     </div>
                     <!-- eslint-disable-next-line vue/no-v-html-->
-                    <div class="incident-content mt-1" v-html="getIncidentHTML(incident.content)"></div>
+                    <div class="incident-content mt-1" v-html="getIncidentHTML(incident)"></div>
                     <div class="incident-meta text-muted small mt-2">
-                        <div>{{ $t("createdAt", { date: datetime(incident.createdDate) }) }}</div>
+                        <div>{{ $t("createdAt", { date: formatStatusTime(incident.createdDate) }) }}</div>
                         <div v-if="incident.lastUpdatedDate">
-                            {{ $t("lastUpdatedAt", { date: datetime(incident.lastUpdatedDate) }) }}
+                            {{ $t("lastUpdatedAt", { date: formatStatusTime(incident.lastUpdatedDate) }) }}
                         </div>
                     </div>
                 </div>
@@ -63,11 +63,10 @@
 <script>
 import { marked } from "marked";
 import DOMPurify from "dompurify";
-import datetimeMixin from "../mixins/datetime";
+import { formatStatusTime, localizeIncidentStamps } from "../util-incident-history.js";
 
 export default {
     name: "IncidentHistory",
-    mixins: [datetimeMixin],
     props: {
         incidents: {
             type: Array,
@@ -86,15 +85,17 @@ export default {
     methods: {
         /**
          * Get sanitized HTML for incident content
-         * @param {string} content - Markdown content
+         * @param {object} incident - Incident with markdown content
          * @returns {string} Sanitized HTML
          */
-        getIncidentHTML(content) {
-            if (content != null) {
-                return DOMPurify.sanitize(marked(content));
+        getIncidentHTML(incident) {
+            if (incident.content != null) {
+                return DOMPurify.sanitize(marked(localizeIncidentStamps(incident.content, incident.createdDate)));
             }
             return "";
         },
+
+        formatStatusTime,
     },
 };
 </script>

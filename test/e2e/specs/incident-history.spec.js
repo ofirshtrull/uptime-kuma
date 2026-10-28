@@ -104,7 +104,7 @@ test.describe("Incident History", () => {
         await screenshot(testInfo, page);
     });
 
-    test("incident history pagination loads more incidents", async ({ page }, testInfo) => {
+    test("incidents from the last 30 days share one page", async ({ page }, testInfo) => {
         test.setTimeout(180000);
 
         await page.goto("./add");
@@ -122,29 +122,63 @@ test.describe("Incident History", () => {
             await page.getByTestId("incident-title").fill("Incident " + i);
             await page.getByTestId("incident-content-editable").fill("Content for incident " + i);
             await page.getByTestId("post-incident-button").click();
-            await page.waitForTimeout(300);
 
-            const resolveButton = page.locator("button", { hasText: "Resolve" }).first();
-            if (await resolveButton.isVisible()) {
-                await resolveButton.click();
-                await page.waitForTimeout(300);
-            }
+            const banner = page.getByTestId("incident").filter({ hasText: "Content for incident " + i });
+            await banner.locator("button", { hasText: "Resolve" }).click();
+            await expect(banner).toHaveCount(0, { timeout: 10000 });
         }
 
         await page.getByTestId("save-button").click();
         await expect(page.getByTestId("edit-sidebar")).toHaveCount(0);
 
-        await page.waitForTimeout(1000);
-
+        await page.goto("./status/pagination-test");
         const pastIncidentsSection = page.locator(".past-incidents-section");
-        await expect(pastIncidentsSection).toBeVisible();
+        await expect(pastIncidentsSection.locator(".incident-title")).toHaveCount(12, { timeout: 15000 });
+        await expect(page.getByTestId("incident-history-pager")).toHaveCount(0);
 
-        const loadMoreButton = page.locator("button", { hasText: "Load More" });
+        await screenshot(testInfo, page);
+    });
 
-        if (await loadMoreButton.isVisible()) {
-            await loadMoreButton.click();
-            await page.waitForTimeout(1000);
-            await screenshot(testInfo, page);
-        }
+    test("backdated incident moves to an older 30-day page", async ({ page }, testInfo) => {
+        test.setTimeout(120000);
+
+        await page.goto("./add");
+        await login(page);
+        await expect(page.getByTestId("monitor-type-select")).toBeVisible();
+
+        await page.goto("./add-status-page");
+        await page.getByTestId("name-input").fill("Backdate Test");
+        await page.getByTestId("slug-input").fill("backdate-test");
+        await page.getByTestId("submit-button").click();
+        await page.waitForURL("/status/backdate-test?edit");
+
+        // datetime-local value in Eastern time, e.g. "2026-09-13T10:00"
+        const fortyFiveDaysAgo = new Date(Date.now() - 45 * 24 * 60 * 60 * 1000)
+            .toLocaleString("sv-SE", { timeZone: "America/New_York" })
+            .slice(0, 16)
+            .replace(" ", "T");
+
+        await page.getByTestId("create-incident-button").click();
+        await page.getByTestId("incident-title").fill("Backdated Incident");
+        await page.getByTestId("incident-content-editable").fill("Happened last month");
+        await page.getByTestId("incident-created-input").fill(fortyFiveDaysAgo);
+        await page.getByTestId("post-incident-button").click();
+
+        const banner = page.getByTestId("incident").filter({ hasText: "Backdated Incident" });
+        await banner.locator("button", { hasText: "Resolve" }).click();
+        await expect(banner).toHaveCount(0, { timeout: 10000 });
+        await expect(page.locator(".past-incidents-section")).toContainText("No incidents reported in this period.");
+
+        await page.getByTestId("save-button").click();
+        await expect(page.getByTestId("edit-sidebar")).toHaveCount(0);
+
+        await page.goto("./status/backdate-test");
+        const pastIncidentsSection = page.locator(".past-incidents-section");
+        await expect(pastIncidentsSection).toContainText("No incidents reported in this period.", { timeout: 15000 });
+
+        await page.getByTestId("incident-history-pager").getByRole("button", { name: /Older/ }).click();
+        await expect(pastIncidentsSection.locator(".incident-title")).toHaveText(["Backdated Incident"]);
+
+        await screenshot(testInfo, page);
     });
 });

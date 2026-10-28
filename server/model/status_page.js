@@ -18,8 +18,10 @@ const {
     UP,
     MAINTENANCE,
     DOWN,
-    INCIDENT_PAGE_SIZE,
 } = require("../../src/util");
+
+const INCIDENT_PAGE_DAYS = 30;
+const INCIDENT_MAX_PAGE = 1000;
 
 class StatusPage extends BeanModel {
     /**
@@ -532,50 +534,46 @@ class StatusPage extends BeanModel {
     }
 
     /**
-     * Get paginated incident history for a status page using cursor-based pagination
+     * Get one 30-day page of incident history for a status page.
+     * Page N holds incidents created 30 * (N - 1) to 30 * N days ago; page 1 has no upper bound.
+     * Active pinned incidents are on every page so the top banner survives paging.
      * @param {number} statusPageId ID of the status page
-     * @param {string|null} cursor ISO date string cursor (created_date of last item from previous page)
+     * @param {number|string} page 1-based page, higher is older
      * @param {boolean} isPublic Whether to return public or admin data
-     * @returns {Promise<object>} Paginated incident data with cursor
+     * @returns {Promise<object>} Incidents, page, hasMore, and the page's from / to (UTC)
      */
-    static async getIncidentHistory(statusPageId, cursor = null, isPublic = true) {
-        let incidents;
+    static async getIncidentHistory(statusPageId, page = 1, isPublic = true) {
+        // Agentic Rule (ARNIE_INPUT_NUMERIC_VALIDATION): page comes from the query string or socket, clamp it.
+        page = Math.min(Math.max(parseInt(page, 10) || 1, 1), INCIDENT_MAX_PAGE);
 
-        if (cursor) {
-            incidents = await R.find(
-                "incident",
-                " status_page_id = ? AND created_date < ? ORDER BY created_date DESC LIMIT ? ",
-                [statusPageId, cursor, INCIDENT_PAGE_SIZE]
-            );
-        } else {
-            incidents = await R.find("incident", " status_page_id = ? ORDER BY created_date DESC LIMIT ? ", [
-                statusPageId,
-                INCIDENT_PAGE_SIZE,
-            ]);
+        const now = dayjs.utc();
+        const from = R.isoDateTime(now.subtract(page * INCIDENT_PAGE_DAYS, "day"));
+        const to = R.isoDateTime(now.subtract((page - 1) * INCIDENT_PAGE_DAYS, "day"));
+
+        let windowSQL = " created_date >= ? ";
+        const params = [statusPageId, from];
+        if (page > 1) {
+            windowSQL += " AND created_date < ? ";
+            params.push(to);
         }
 
-        const total = await R.count("incident", " status_page_id = ? ", [statusPageId]);
-
-        const lastIncident = incidents[incidents.length - 1];
-        let nextCursor = null;
-        let hasMore = false;
-
-        if (lastIncident) {
-            const moreCount = await R.count("incident", " status_page_id = ? AND created_date < ? ", [
-                statusPageId,
-                lastIncident.created_date,
-            ]);
-            hasMore = moreCount > 0;
-            if (hasMore) {
-                nextCursor = lastIncident.created_date;
-            }
-        }
+        const incidents = await R.find(
+            "incident",
+            ` status_page_id = ? AND ((active = 1 AND pin = 1) OR (${windowSQL})) ORDER BY created_date DESC `,
+            params
+        );
+        const olderCount = await R.count(
+            "incident",
+            " status_page_id = ? AND created_date < ? AND NOT (active = 1 AND pin = 1) ",
+            [statusPageId, from]
+        );
 
         return {
             incidents: incidents.map((i) => i.toPublicJSON()),
-            total,
-            nextCursor,
-            hasMore,
+            page,
+            hasMore: olderCount > 0,
+            from,
+            to,
         };
     }
 

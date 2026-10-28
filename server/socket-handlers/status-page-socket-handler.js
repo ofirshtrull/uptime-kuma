@@ -33,6 +33,8 @@ module.exports.statusPageSocketHandler = (socket) => {
     socket.on("postIncident", async (slug, incident, callback) => {
         try {
             checkLogin(socket);
+            // Agentic Rule (ARNIE_INPUT_SERVER_VALIDATION): same server-side checks as editIncident, not just the UI's.
+            validateIncident(incident);
 
             let statusPageID = await StatusPage.slugToID(slug);
 
@@ -66,6 +68,7 @@ module.exports.statusPageSocketHandler = (socket) => {
             } else {
                 incidentBean.created_date = R.isoDateTime(dayjs.utc());
             }
+            incidentBean.applyCreatedDate(incident.createdDate);
 
             await R.store(incidentBean);
             apicache.clear();
@@ -102,7 +105,7 @@ module.exports.statusPageSocketHandler = (socket) => {
         }
     });
 
-    socket.on("getIncidentHistory", async (slug, cursor, callback) => {
+    socket.on("getIncidentHistory", async (slug, page, callback) => {
         try {
             let statusPageID = await StatusPage.slugToID(slug);
             if (!statusPageID) {
@@ -110,7 +113,7 @@ module.exports.statusPageSocketHandler = (socket) => {
             }
 
             const isPublic = !socket.userID;
-            const result = await StatusPage.getIncidentHistory(statusPageID, cursor, isPublic);
+            const result = await StatusPage.getIncidentHistory(statusPageID, page, isPublic);
             callback({
                 ok: true,
                 ...result,
@@ -167,6 +170,7 @@ module.exports.statusPageSocketHandler = (socket) => {
             bean.content = incident.content;
             bean.style = incident.style;
             bean.applyStatus(incident.status);
+            bean.applyCreatedDate(incident.createdDate);
             if (bean.status !== "resolved") {
                 bean.pin = incident.pin !== false;
             }
